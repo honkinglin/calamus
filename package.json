@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web dev",
     "build": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web build",
-    "check": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web check"
+    "check": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web check",
+    "test": "pnpm --filter @calamus/core build && node --test packages/core/test/*.test.mjs"
   },
   "devDependencies": {
     "typescript": "5.9.3"

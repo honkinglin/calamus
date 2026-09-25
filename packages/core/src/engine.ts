@@ -27,7 +27,7 @@ export class Calamus {
     if (![this.width, this.height].every(value => Number.isFinite(value) && value > 0)) {
       throw new RangeError('Canvas dimensions must be positive finite numbers.');
     }
-    this.brush = { color: '#253631', size: 6 };
+    this.brush = { color: '#253631', size: 6, smoothing: 0.55, stabilizer: 0, velocityWidth: true };
     this.setBrush(options.brush ?? {});
     this.originalTouchAction = canvas.style.touchAction;
     canvas.style.touchAction = 'none';
@@ -47,10 +47,17 @@ export class Calamus {
   setBrush(settings: Partial<Brush>): void {
     const next = { ...this.brush, ...settings };
     if (!Number.isFinite(next.size) || next.size <= 0) throw new RangeError('Brush size must be positive.');
+    if (next.smoothing !== undefined && (!Number.isFinite(next.smoothing) || next.smoothing < 0 || next.smoothing > 1)) {
+      throw new RangeError('Smoothing must be between zero and one.');
+    }
+    if (next.stabilizer !== undefined && (!Number.isFinite(next.stabilizer) || next.stabilizer < 0)) {
+      throw new RangeError('Stabilizer radius must be nonnegative.');
+    }
     this.brush = next;
   }
 
   setStrokes(strokes: Stroke[]): void {
+    this.cancel();
     this.strokes = structuredClone(strokes);
     this.render();
   }
@@ -96,7 +103,8 @@ export class Calamus {
     this.render();
   };
 
-  private cancel = (): void => {
+  private cancel = (event?: Event): void => {
+    if (event instanceof PointerEvent && event.pointerId !== this.active?.id) return;
     const id = this.active?.id;
     this.active = null;
     if (id !== undefined && this.canvas.hasPointerCapture(id)) this.canvas.releasePointerCapture(id);

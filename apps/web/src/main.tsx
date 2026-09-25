@@ -14,6 +14,9 @@ function App() {
   });
   const [color, setColor] = useState(palette[0]);
   const [size, setSize] = useState(6);
+  const [smoothing, setSmoothing] = useState(0.55);
+  const [stabilizer, setStabilizer] = useState(0);
+  const [velocityWidth, setVelocityWidth] = useState(true);
   const [paper, setPaper] = useState<'plain' | 'dots'>('dots');
   const [counts, setCounts] = useState({ strokes: 0, undo: 0, redo: 0 });
 
@@ -27,8 +30,8 @@ function App() {
   }, []);
 
   useEffect(() => {
-    engine.current?.setBrush({ color, size });
-  }, [color, size]);
+    engine.current?.setBrush({ color, size, smoothing, stabilizer, velocityWidth });
+  }, [color, size, smoothing, stabilizer, velocityWidth]);
 
   function update() {
     const { strokes, past, future } = history.current;
@@ -110,6 +113,16 @@ function App() {
             </div>
             <label>Size <output>{size} px</output><input type="range" min="1" max="48" value={size}
               onChange={event => setSize(Number(event.currentTarget.value))} /></label>
+            <label>Smoothing <output>{Math.round(smoothing * 100)}%</output>
+              <input type="range" min="0" max="1" step="0.05" value={smoothing}
+                onChange={event => setSmoothing(Number(event.currentTarget.value))} />
+            </label>
+            <label>Stabilizer <output>{stabilizer} px</output>
+              <input type="range" min="0" max="24" value={stabilizer}
+                onChange={event => setStabilizer(Number(event.currentTarget.value))} />
+            </label>
+            <label><input type="checkbox" checked={velocityWidth}
+              onChange={event => setVelocityWidth(event.currentTarget.checked)} /> Speed-sensitive width</label>
           </section>
           <section>
             <h2>Paper</h2>

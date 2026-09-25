@@ -13,5 +13,6 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm test
       - run: pnpm build
       - run: pnpm --filter @calamus/core pack --pack-destination "${{ runner.temp }}"
