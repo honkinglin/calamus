@@ -1,0 +1,16 @@
+{
+  "name": "calamus-workspace",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web dev",
+    "build": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web build",
+    "check": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web check"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  },
+  "packageManager": "pnpm@10.15.1"
+}
