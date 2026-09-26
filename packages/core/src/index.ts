@@ -1,4 +1,6 @@
-import { processStroke } from './stroke.js';
+import { createStrokeGeometry } from './geometry.js';
+export { createStrokeGeometry } from './geometry.js';
+export type { Vertex } from './geometry.js';
 export { processStroke } from './stroke.js';
 export type { RenderPoint } from './stroke.js';
 
@@ -25,24 +27,15 @@ export interface Stroke {
 export const PAPER = { width: 1000, height: 700 };
 
 export function drawStroke(ctx: CanvasRenderingContext2D, stroke: Stroke): void {
-  const [first, ...points] = processStroke(stroke);
-  if (!first) return;
-
-  ctx.fillStyle = ctx.strokeStyle = stroke.brush.color;
-  ctx.lineCap = 'round';
+  const polygons = createStrokeGeometry(stroke);
+  ctx.fillStyle = stroke.brush.color;
   ctx.beginPath();
-  ctx.arc(first.x, first.y, first.width / 2, 0, Math.PI * 2);
-  ctx.fill();
-
-  let previous = first;
-  for (const point of points) {
-    ctx.lineWidth = (previous.width + point.width) / 2;
-    ctx.beginPath();
-    ctx.moveTo(previous.x, previous.y);
-    ctx.lineTo(point.x, point.y);
-    ctx.stroke();
-    previous = point;
+  for (const polygon of polygons) {
+    ctx.moveTo(polygon[0].x, polygon[0].y);
+    for (const vertex of polygon.slice(1)) ctx.lineTo(vertex.x, vertex.y);
+    ctx.closePath();
   }
+  ctx.fill('nonzero');
 }
 
 export { Calamus } from './engine.js';

@@ -14,12 +14,16 @@ export function processStroke(stroke: Stroke): RenderPoint[] {
   let filteredPressure = points[0].pressure ?? 0.5;
   let tip = { ...points[0] };
   let previous = points[0];
+  let travelled = 0;
 
   for (const point of points) {
     const elapsed = Math.max(1, point.time - previous.time);
     const velocity = Math.hypot(point.x - previous.x, point.y - previous.y) / elapsed;
+    travelled += Math.hypot(point.x - previous.x, point.y - previous.y);
+    // Grow the radius gradually so short gestures still produce a visible line.
+    const effectiveRadius = radius === 0 ? 0 : radius * (1 - Math.exp(-travelled / (radius * 2)));
     const distance = Math.hypot(point.x - tip.x, point.y - tip.y);
-    const follow = distance > 0 ? Math.max(0, distance - radius) / distance : 0;
+    const follow = distance > 0 ? Math.max(0, distance - effectiveRadius) / distance : 0;
     const targetX = tip.x + (point.x - tip.x) * follow;
     const targetY = tip.y + (point.y - tip.y) * follow;
     const response = smoothing === 0 ? 1 : 1 - Math.exp(-elapsed / (1 + smoothing * 24 / (1 + velocity * 3)));
