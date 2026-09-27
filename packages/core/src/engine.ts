@@ -11,6 +11,9 @@ export interface CalamusOptions {
 /** Owns pointer input and renders strokes in document coordinates. */
 export class Calamus {
   private strokes: Stroke[] = [];
+  private committedCanvas: HTMLCanvasElement;
+  private committedDirty = true;
+  private resolutionQuery?: MediaQueryList;
   private brush: Brush;
   private active: { id: number; start: number; stroke: Stroke } | null = null;
   private observer: ResizeObserver;
@@ -27,6 +30,7 @@ export class Calamus {
     if (![this.width, this.height].every(value => Number.isFinite(value) && value > 0)) {
       throw new RangeError('Canvas dimensions must be positive finite numbers.');
     }
+    this.committedCanvas = canvas.ownerDocument.createElement('canvas');
     this.brush = { color: '#253631', size: 6, smoothing: 0.55, stabilizer: 0, velocityWidth: true };
     this.setBrush(options.brush ?? {});
     this.originalTouchAction = canvas.style.touchAction;
@@ -41,6 +45,7 @@ export class Calamus {
     window.addEventListener('resize', this.resize, { signal });
     this.observer = new ResizeObserver(this.resize);
     this.observer.observe(canvas);
+    this.watchResolution();
     this.resize();
   }
 
@@ -57,8 +62,11 @@ export class Calamus {
   }
 
   setStrokes(strokes: Stroke[]): void {
+    if (this.destroyed) throw new Error('Calamus has been destroyed.');
+    const replacement = structuredClone(strokes);
     this.cancel();
-    this.strokes = structuredClone(strokes);
+    this.strokes = replacement;
+    this.committedDirty = true;
     this.render();
   }
 
@@ -99,8 +107,9 @@ export class Calamus {
     }
     this.active = null;
     this.strokes.push(stroke);
-    this.options.onStroke?.(structuredClone(stroke));
+    this.committedDirty = true;
     this.render();
+    this.options.onStroke?.(structuredClone(stroke));
   };
 
   private cancel = (event?: Event): void => {
@@ -111,10 +120,24 @@ export class Calamus {
     this.schedule();
   };
 
+  private watchResolution = (): void => {
+    this.resolutionQuery?.removeEventListener('change', this.watchResolution);
+    if (this.destroyed) return;
+    this.resolutionQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+    this.resolutionQuery.addEventListener('change', this.watchResolution);
+    this.resize();
+  };
+
   private resize = (): void => {
+    if (this.destroyed) return;
     const ratio = window.devicePixelRatio || 1;
-    this.canvas.width = Math.max(1, Math.round(this.canvas.clientWidth * ratio));
-    this.canvas.height = Math.max(1, Math.round(this.canvas.clientHeight * ratio));
+    const width = Math.max(1, Math.round(this.canvas.clientWidth * ratio));
+    const height = Math.max(1, Math.round(this.canvas.clientHeight * ratio));
+    if (this.canvas.width === width && this.canvas.height === height &&
+        this.committedCanvas.width === width && this.committedCanvas.height === height) return;
+    this.canvas.width = this.committedCanvas.width = width;
+    this.canvas.height = this.committedCanvas.height = height;
+    this.committedDirty = true;
     this.render();
   };
 
@@ -132,7 +155,15 @@ export class Calamus {
     if (!ctx) return;
     ctx.setTransform(this.canvas.width / this.width, 0, 0, this.canvas.height / this.height, 0, 0);
     ctx.clearRect(0, 0, this.width, this.height);
-    for (const stroke of this.strokes) drawStroke(ctx, stroke);
+    if (this.committedDirty) {
+      const cached = this.committedCanvas.getContext('2d');
+      if (!cached) return;
+      cached.setTransform(this.canvas.width / this.width, 0, 0, this.canvas.height / this.height, 0, 0);
+      cached.clearRect(0, 0, this.width, this.height);
+      for (const stroke of this.strokes) drawStroke(cached, stroke);
+      this.committedDirty = false;
+    }
+    ctx.drawImage(this.committedCanvas, 0, 0, this.width, this.height);
     if (this.active) drawStroke(ctx, this.active.stroke);
   }
 
@@ -140,6 +171,7 @@ export class Calamus {
     this.destroyed = true;
     this.controller.abort();
     this.observer.disconnect();
+    this.resolutionQuery?.removeEventListener('change', this.watchResolution);
     this.cancel();
     cancelAnimationFrame(this.frame);
     this.canvas.style.touchAction = this.originalTouchAction;
