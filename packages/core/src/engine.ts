@@ -6,11 +6,20 @@ export interface CalamusOptions {
   height?: number;
   brush?: Partial<Brush>;
   onStroke?: (stroke: Stroke) => void;
+  onChange?: (state: HistoryState) => void;
+}
+
+export interface HistoryState {
+  strokes: number;
+  undo: number;
+  redo: number;
 }
 
 /** Owns pointer input and renders strokes in document coordinates. */
 export class Calamus {
   private strokes: Stroke[] = [];
+  private past: Stroke[][] = [];
+  private future: Stroke[][] = [];
   private committedCanvas: HTMLCanvasElement;
   private committedDirty = true;
   private resolutionQuery?: MediaQueryList;
@@ -61,13 +70,60 @@ export class Calamus {
     this.brush = next;
   }
 
+  get state(): HistoryState {
+    return { strokes: this.strokes.length, undo: this.past.length, redo: this.future.length };
+  }
+
+  getStrokes(): Stroke[] {
+    return structuredClone(this.strokes);
+  }
+
   setStrokes(strokes: Stroke[]): void {
-    if (this.destroyed) throw new Error('Calamus has been destroyed.');
+    this.assertAlive();
     const replacement = structuredClone(strokes);
     this.cancel();
-    this.strokes = replacement;
+    this.commit(replacement);
+  }
+
+  clear(): void {
+    this.assertAlive();
+    this.cancel();
+    if (this.strokes.length) this.commit([]);
+  }
+
+  undo(): void {
+    this.restore(this.past, this.future);
+  }
+
+  redo(): void {
+    this.restore(this.future, this.past);
+  }
+
+  private assertAlive(): void {
+    if (this.destroyed) throw new Error('Calamus has been destroyed.');
+  }
+
+  private commit(strokes: Stroke[]): void {
+    this.past.push(this.strokes);
+    this.future = [];
+    this.strokes = strokes;
+    this.changed();
+  }
+
+  private restore(source: Stroke[][], destination: Stroke[][]): void {
+    this.assertAlive();
+    this.cancel();
+    const strokes = source.pop();
+    if (!strokes) return;
+    destination.push(this.strokes);
+    this.strokes = strokes;
+    this.changed();
+  }
+
+  private changed(): void {
     this.committedDirty = true;
     this.render();
+    this.options.onChange?.(this.state);
   }
 
   private sample(event: PointerEvent): Point {
@@ -106,9 +162,7 @@ export class Calamus {
       stroke.points.push({ ...end, pressure: last.pressure });
     }
     this.active = null;
-    this.strokes.push(stroke);
-    this.committedDirty = true;
-    this.render();
+    this.commit([...this.strokes, stroke]);
     this.options.onStroke?.(structuredClone(stroke));
   };
 

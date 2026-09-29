@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Calamus, drawStroke, PAPER } from '@calamus/core';
-import type { Stroke } from '@calamus/core';
 import './style.css';
 
 const palette = ['#253631', '#477c6c', '#b85c4c', '#ba8c46', '#5f6aab'];
@@ -9,9 +8,6 @@ const palette = ['#253631', '#477c6c', '#b85c4c', '#ba8c46', '#5f6aab'];
 function App() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const engine = useRef<Calamus | null>(null);
-  const history = useRef<{ past: Stroke[][]; future: Stroke[][]; strokes: Stroke[] }>({
-    past: [], future: [], strokes: [],
-  });
   const [color, setColor] = useState(palette[0]);
   const [size, setSize] = useState(6);
   const [smoothing, setSmoothing] = useState(0.55);
@@ -23,7 +19,7 @@ function App() {
   useEffect(() => {
     if (!canvas.current) return;
     const board = new Calamus(canvas.current, {
-      onStroke: stroke => commit([...history.current.strokes, stroke]),
+      onChange: setCounts,
     });
     engine.current = board;
     return () => board.destroy();
@@ -33,27 +29,9 @@ function App() {
     engine.current?.setBrush({ color, size, smoothing, stabilizer, velocityWidth });
   }, [color, size, smoothing, stabilizer, velocityWidth]);
 
-  function update() {
-    const { strokes, past, future } = history.current;
-    setCounts({ strokes: strokes.length, undo: past.length, redo: future.length });
-    engine.current?.setStrokes(strokes);
-  }
-
-  function commit(strokes: Stroke[]) {
-    const state = history.current;
-    state.past.push(state.strokes);
-    state.strokes = strokes;
-    state.future = [];
-    update();
-  }
-
   function step(redo: boolean) {
-    const state = history.current;
-    const next = (redo ? state.future : state.past).pop();
-    if (!next) return;
-    (redo ? state.past : state.future).push(state.strokes);
-    state.strokes = next;
-    update();
+    if (redo) engine.current?.redo();
+    else engine.current?.undo();
   }
 
   useEffect(() => {
@@ -75,7 +53,7 @@ function App() {
     if (!ctx) return;
     ctx.fillStyle = '#fffdf7';
     ctx.fillRect(0, 0, image.width, image.height);
-    for (const stroke of history.current.strokes) drawStroke(ctx, stroke);
+    for (const stroke of engine.current?.getStrokes() ?? []) drawStroke(ctx, stroke);
     const link = document.createElement('a');
     link.download = 'calamus.png';
     link.href = image.toDataURL('image/png');
@@ -95,7 +73,7 @@ function App() {
             <div className="actions">
               <button disabled={!counts.undo} onClick={() => step(false)}>Undo</button>
               <button disabled={!counts.redo} onClick={() => step(true)}>Redo</button>
-              <button disabled={!counts.strokes} onClick={() => { commit([]); }}>Clear</button>
+              <button disabled={!counts.strokes} onClick={() => engine.current?.clear()}>Clear</button>
             </div>
           </div>
           <div className={'paper ' + paper}>

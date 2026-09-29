@@ -39,4 +39,4 @@ export function drawStroke(ctx: CanvasRenderingContext2D, stroke: Stroke): void 
 }
 
 export { Calamus } from './engine.js';
-export type { CalamusOptions } from './engine.js';
+export type { CalamusOptions, HistoryState } from './engine.js';
