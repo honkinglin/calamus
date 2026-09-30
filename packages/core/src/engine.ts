@@ -1,3 +1,4 @@
+import { parseDocument } from './document.js';
 import { drawStroke, PAPER } from './index.js';
 import type { Brush, Point, Stroke } from './index.js';
 
@@ -72,6 +73,20 @@ export class Calamus {
 
   get state(): HistoryState {
     return { strokes: this.strokes.length, undo: this.past.length, redo: this.future.length };
+  }
+
+  exportJSON(): string {
+    this.assertAlive();
+    return JSON.stringify({ schemaVersion: 1, width: this.width, height: this.height, strokes: this.strokes });
+  }
+
+  loadJSON(json: string): void {
+    this.assertAlive();
+    const document = parseDocument(json);
+    if (document.width !== this.width || document.height !== this.height) {
+      throw new RangeError('Document dimensions must match this canvas.');
+    }
+    this.setStrokes(document.strokes);
   }
 
   getStrokes(): Stroke[] {

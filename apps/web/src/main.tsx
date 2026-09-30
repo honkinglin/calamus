@@ -6,6 +6,8 @@ import './style.css';
 const palette = ['#253631', '#477c6c', '#b85c4c', '#ba8c46', '#5f6aab'];
 
 function App() {
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [fileMessage, setFileMessage] = useState('');
   const canvas = useRef<HTMLCanvasElement>(null);
   const engine = useRef<Calamus | null>(null);
   const [color, setColor] = useState(palette[0]);
@@ -45,6 +47,29 @@ function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  function exportDocument() {
+    const json = engine.current?.exportJSON();
+    if (!json) return;
+    const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'calamus.json';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function importDocument(file: File | undefined) {
+    if (!file) return;
+    try {
+      if (file.size > 20_000_000) throw new Error('Document exceeds 20 MB.');
+      const content = await file.text();
+      engine.current?.loadJSON(content);
+      setFileMessage('Drawing imported. Use Undo to restore your previous drawing.');
+    } catch (error) {
+      setFileMessage(error instanceof Error ? error.message : 'Unable to import drawing.');
+    }
+  }
+
   function exportImage() {
     const image = document.createElement('canvas');
     image.width = PAPER.width;
@@ -64,7 +89,13 @@ function App() {
     <>
       <header>
         <a className="brand" href="./" aria-label="Calamus home"><span aria-hidden="true">✒</span> Calamus</a>
-        <button className="primary" onClick={exportImage}>Export PNG</button>
+        <div className="actions">
+          <input ref={fileInput} type="file" accept=".json,application/json" hidden
+            onChange={event => { void importDocument(event.currentTarget.files?.[0]); event.currentTarget.value = ''; }} />
+          <button onClick={() => fileInput.current?.click()}>Import JSON</button>
+          <button onClick={exportDocument}>Export JSON</button>
+          <button className="primary" onClick={exportImage}>Export PNG</button>
+        </div>
       </header>
       <main>
         <section className="workspace" aria-label="Drawing workspace">
@@ -76,6 +107,7 @@ function App() {
               <button disabled={!counts.strokes} onClick={() => engine.current?.clear()}>Clear</button>
             </div>
           </div>
+          <p role="status">{fileMessage}</p>
           <div className={'paper ' + paper}>
             <canvas ref={canvas} aria-label="Drawing canvas" />
             {!counts.strokes && <span className="paper-hint">Draw anywhere to begin</span>}
