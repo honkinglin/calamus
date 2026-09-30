@@ -55,6 +55,14 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     surface.ownerDocument.createElement = () => cache;
     const engine = new Calamus(surface);
     engine.setStrokes([{ brush: { color: '#000', size: 5 }, points: [{ x: 0, y: 0, time: 0, pressure: null }] }]);
+    const before = engine.exportJSON();
+    const historyBefore = engine.state;
+    assert.throws(() => engine.loadJSON('{"schemaVersion":2}'));
+    assert.equal(engine.exportJSON(), before);
+    assert.deepEqual(engine.state, historyBefore);
+    engine.loadJSON(before);
+    engine.undo();
+    assert.equal(engine.exportJSON(), before);
     const fills = cache.fills;
     surface.dispatchEvent(new Pointer('pointerdown', { pointerId: 1, button: 0, isPrimary: true, clientX: 10, clientY: 10, pointerType: 'mouse' }));
     scheduled();

@@ -43,3 +43,5 @@ export type { CalamusOptions, HistoryState } from './engine.js';
 
 export { parseDocument } from './document.js';
 export type { CalamusDocument } from './document.js';
+
+export { createSVG } from './export.js';

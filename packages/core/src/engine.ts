@@ -1,3 +1,4 @@
+import { createSVG } from './export.js';
 import { parseDocument } from './document.js';
 import { drawStroke, PAPER } from './index.js';
 import type { Brush, Point, Stroke } from './index.js';
@@ -73,6 +74,11 @@ export class Calamus {
 
   get state(): HistoryState {
     return { strokes: this.strokes.length, undo: this.past.length, redo: this.future.length };
+  }
+
+  exportSVG(): string {
+    this.assertAlive();
+    return createSVG(this.strokes, this.width, this.height);
   }
 
   exportJSON(): string {

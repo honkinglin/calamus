@@ -31,8 +31,8 @@ export function parseDocument(input: string): CalamusDocument {
   const strokes = data.strokes.map(value => {
     const stroke = record(value);
     const brush = record(stroke.brush);
-    if (typeof brush.color !== 'string' || !/^#[\da-f]{6}$/i.test(brush.color)) {
-      throw new TypeError('Document colors must use six-digit hexadecimal notation.');
+    if (typeof brush.color !== 'string' || !/^#(?:[\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i.test(brush.color)) {
+      throw new TypeError('Document colors must use hexadecimal notation.');
     }
     if (!Array.isArray(stroke.points) || stroke.points.length === 0) throw new TypeError('Stroke has no points.');
     count += stroke.points.length;

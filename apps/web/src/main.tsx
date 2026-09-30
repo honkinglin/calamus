@@ -47,6 +47,17 @@ function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  function exportVector() {
+    const svg = engine.current?.exportSVG();
+    if (!svg) return;
+    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'calamus.svg';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   function exportDocument() {
     const json = engine.current?.exportJSON();
     if (!json) return;
@@ -94,6 +105,7 @@ function App() {
             onChange={event => { void importDocument(event.currentTarget.files?.[0]); event.currentTarget.value = ''; }} />
           <button onClick={() => fileInput.current?.click()}>Import JSON</button>
           <button onClick={exportDocument}>Export JSON</button>
+          <button onClick={exportVector}>Export SVG</button>
           <button className="primary" onClick={exportImage}>Export PNG</button>
         </div>
       </header>
