@@ -98,6 +98,7 @@ export class Calamus {
   }
 
   stopReplay(): void {
+    if (!this.playback) return;
     cancelAnimationFrame(this.playbackFrame);
     this.playback = null;
     this.render();
