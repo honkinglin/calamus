@@ -1,3 +1,4 @@
+import { replayDuration, replayFrame } from './replay.js';
 import { createSVG } from './export.js';
 import { parseDocument } from './document.js';
 import { drawStroke, PAPER } from './index.js';
@@ -20,6 +21,8 @@ export interface HistoryState {
 /** Owns pointer input and renders strokes in document coordinates. */
 export class Calamus {
   private strokes: Stroke[] = [];
+  private playback: { elapsed: number; previous: number | null; paused: boolean } | null = null;
+  private playbackFrame = 0;
   private past: Stroke[][] = [];
   private future: Stroke[][] = [];
   private committedCanvas: HTMLCanvasElement;
@@ -72,6 +75,47 @@ export class Calamus {
     this.brush = next;
   }
 
+  play(): void {
+    this.assertAlive();
+    this.cancel();
+    this.stopReplay();
+    if (!this.strokes.length) return;
+    this.playback = { elapsed: 0, previous: null, paused: false };
+    this.playbackFrame = requestAnimationFrame(this.tickReplay);
+  }
+
+  pauseReplay(): void {
+    if (!this.playback) return;
+    this.playback.paused = true;
+    this.playback.previous = null;
+    cancelAnimationFrame(this.playbackFrame);
+  }
+
+  resumeReplay(): void {
+    if (!this.playback?.paused) return;
+    this.playback.paused = false;
+    this.playbackFrame = requestAnimationFrame(this.tickReplay);
+  }
+
+  stopReplay(): void {
+    cancelAnimationFrame(this.playbackFrame);
+    this.playback = null;
+    this.render();
+  }
+
+  private tickReplay = (time: number): void => {
+    const playback = this.playback;
+    if (!playback || playback.paused || this.destroyed) return;
+    if (playback.previous !== null) playback.elapsed += time - playback.previous;
+    playback.previous = time;
+    if (playback.elapsed >= replayDuration(this.strokes)) {
+      this.stopReplay();
+      return;
+    }
+    this.render();
+    this.playbackFrame = requestAnimationFrame(this.tickReplay);
+  };
+
   get state(): HistoryState {
     return { strokes: this.strokes.length, undo: this.past.length, redo: this.future.length };
   }
@@ -102,12 +146,14 @@ export class Calamus {
   setStrokes(strokes: Stroke[]): void {
     this.assertAlive();
     const replacement = structuredClone(strokes);
+    this.stopReplay();
     this.cancel();
     this.commit(replacement);
   }
 
   clear(): void {
     this.assertAlive();
+    this.stopReplay();
     this.cancel();
     if (this.strokes.length) this.commit([]);
   }
@@ -133,6 +179,7 @@ export class Calamus {
 
   private restore(source: Stroke[][], destination: Stroke[][]): void {
     this.assertAlive();
+    this.stopReplay();
     this.cancel();
     const strokes = source.pop();
     if (!strokes) return;
@@ -158,7 +205,7 @@ export class Calamus {
   }
 
   private begin = (event: PointerEvent): void => {
-    if (this.active || event.button !== 0 || !event.isPrimary) return;
+    if (this.playback || this.active || event.button !== 0 || !event.isPrimary) return;
     this.canvas.setPointerCapture(event.pointerId);
     this.active = {
       id: event.pointerId, start: event.timeStamp,
@@ -230,6 +277,10 @@ export class Calamus {
     if (!ctx) return;
     ctx.setTransform(this.canvas.width / this.width, 0, 0, this.canvas.height / this.height, 0, 0);
     ctx.clearRect(0, 0, this.width, this.height);
+    if (this.playback) {
+      for (const stroke of replayFrame(this.strokes, this.playback.elapsed)) drawStroke(ctx, stroke);
+      return;
+    }
     if (this.committedDirty) {
       const cached = this.committedCanvas.getContext('2d');
       if (!cached) return;
@@ -244,6 +295,7 @@ export class Calamus {
 
   destroy(): void {
     this.destroyed = true;
+    this.stopReplay();
     this.controller.abort();
     this.observer.disconnect();
     this.resolutionQuery?.removeEventListener('change', this.watchResolution);

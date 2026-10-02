@@ -147,6 +147,15 @@ function App() {
               onChange={event => setVelocityWidth(event.currentTarget.checked)} /> Speed-sensitive width</label>
           </section>
           <section>
+            <h2>Replay</h2>
+            <div className="actions">
+              <button disabled={!counts.strokes} onClick={() => engine.current?.play()}>Play</button>
+              <button onClick={() => engine.current?.pauseReplay()}>Pause</button>
+              <button onClick={() => engine.current?.resumeReplay()}>Resume</button>
+              <button onClick={() => engine.current?.stopReplay()}>Stop</button>
+            </div>
+          </section>
+          <section>
             <h2>Paper</h2>
             <div className="actions" role="group" aria-label="Paper guides">
               <button aria-pressed={paper === 'plain'} onClick={() => setPaper('plain')}>Plain</button>
