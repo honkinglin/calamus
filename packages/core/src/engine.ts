@@ -10,7 +10,10 @@ export interface CalamusOptions {
   brush?: Partial<Brush>;
   onStroke?: (stroke: Stroke) => void;
   onChange?: (state: HistoryState) => void;
+  onReplayChange?: (state: ReplayState) => void;
 }
+
+export type ReplayState = 'idle' | 'playing' | 'paused';
 
 export interface HistoryState {
   strokes: number;
@@ -21,7 +24,7 @@ export interface HistoryState {
 /** Owns pointer input and renders strokes in document coordinates. */
 export class Calamus {
   private strokes: Stroke[] = [];
-  private playback: { elapsed: number; previous: number | null; paused: boolean } | null = null;
+  private playback: { elapsed: number; previous: number | null; paused: boolean; speed: number } | null = null;
   private playbackFrame = 0;
   private past: Stroke[][] = [];
   private future: Stroke[][] = [];
@@ -75,26 +78,33 @@ export class Calamus {
     this.brush = next;
   }
 
-  play(): void {
+  play(options: { speed?: number } = {}): void {
     this.assertAlive();
+    const speed = options.speed ?? 1;
+    if (!Number.isFinite(speed) || speed < 0.25 || speed > 4) {
+      throw new RangeError('Replay speed must be between 0.25 and 4.');
+    }
     this.cancel();
     this.stopReplay();
     if (!this.strokes.length) return;
-    this.playback = { elapsed: 0, previous: null, paused: false };
+    this.playback = { elapsed: 0, previous: null, paused: false, speed };
     this.playbackFrame = requestAnimationFrame(this.tickReplay);
+    this.options.onReplayChange?.('playing');
   }
 
   pauseReplay(): void {
-    if (!this.playback) return;
+    if (!this.playback || this.playback.paused) return;
     this.playback.paused = true;
     this.playback.previous = null;
     cancelAnimationFrame(this.playbackFrame);
+    this.options.onReplayChange?.('paused');
   }
 
   resumeReplay(): void {
     if (!this.playback?.paused) return;
     this.playback.paused = false;
     this.playbackFrame = requestAnimationFrame(this.tickReplay);
+    this.options.onReplayChange?.('playing');
   }
 
   stopReplay(): void {
@@ -102,12 +112,13 @@ export class Calamus {
     cancelAnimationFrame(this.playbackFrame);
     this.playback = null;
     this.render();
+    this.options.onReplayChange?.('idle');
   }
 
   private tickReplay = (time: number): void => {
     const playback = this.playback;
     if (!playback || playback.paused || this.destroyed) return;
-    if (playback.previous !== null) playback.elapsed += time - playback.previous;
+    if (playback.previous !== null) playback.elapsed += (time - playback.previous) * playback.speed;
     playback.previous = time;
     if (playback.elapsed >= replayDuration(this.strokes)) {
       this.stopReplay();

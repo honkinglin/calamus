@@ -11,6 +11,8 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
   const queries = [];
   let observer;
   let scheduled;
+  let frameId = 0;
+  const frames = new Map();
   class Pointer extends Event {
     constructor(type, values) { super(type); Object.assign(this, values); }
   }
@@ -48,12 +50,22 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
       observe() {}
       disconnect() { this.disconnected = true; }
     });
-    install('requestAnimationFrame', callback => { scheduled = callback; return 1; });
-    install('cancelAnimationFrame', () => { scheduled = undefined; });
+    install('requestAnimationFrame', callback => {
+      const id = ++frameId;
+      frames.set(id, callback);
+      scheduled = time => { frames.delete(id); callback(time); };
+      return id;
+    });
+    install('cancelAnimationFrame', id => {
+      frames.delete(id);
+      const latest = [...frames.entries()].at(-1);
+      if (latest) scheduled = time => { frames.delete(latest[0]); latest[1](time); };
+    });
     const surface = new Surface();
     const cache = new Surface();
     surface.ownerDocument.createElement = () => cache;
-    const engine = new Calamus(surface);
+    const replayStates = [];
+    const engine = new Calamus(surface, { onReplayChange: state => replayStates.push(state) });
     engine.setStrokes([{ brush: { color: '#000', size: 5 }, points: [{ x: 0, y: 0, time: 0, pressure: null }] }]);
     const before = engine.exportJSON();
     const historyBefore = engine.state;
@@ -63,6 +75,23 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     engine.loadJSON(before);
     engine.undo();
     assert.equal(engine.exportJSON(), before);
+    assert.throws(() => engine.play({ speed: 0 }), /speed/);
+    const unchanged = engine.exportJSON();
+    const unchangedHistory = engine.state;
+    engine.play({ speed: 2 });
+    scheduled(0);
+    engine.pauseReplay();
+    engine.resumeReplay();
+    scheduled(1000);
+    assert.equal(replayStates.at(-1), 'playing');
+    scheduled(1060);
+    assert.deepEqual(replayStates, ['playing', 'paused', 'playing', 'idle']);
+    assert.equal(engine.exportJSON(), unchanged);
+    assert.deepEqual(engine.state, unchangedHistory);
+    engine.play();
+    engine.clear();
+    assert.equal(replayStates.at(-1), 'idle');
+    engine.undo();
     const fills = cache.fills;
     surface.dispatchEvent(new Pointer('pointerdown', { pointerId: 1, button: 0, isPrimary: true, clientX: 10, clientY: 10, pointerType: 'mouse' }));
     scheduled();

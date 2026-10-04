@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Calamus, drawStroke, PAPER } from '@calamus/core';
+import type { ReplayState } from '@calamus/core';
 import './style.css';
 
 const palette = ['#253631', '#477c6c', '#b85c4c', '#ba8c46', '#5f6aab'];
 
 function App() {
+  const [replayState, setReplayState] = useState<ReplayState>('idle');
+  const [replaySpeed, setReplaySpeed] = useState(1);
   const fileInput = useRef<HTMLInputElement>(null);
   const [fileMessage, setFileMessage] = useState('');
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -22,6 +25,7 @@ function App() {
     if (!canvas.current) return;
     const board = new Calamus(canvas.current, {
       onChange: setCounts,
+      onReplayChange: setReplayState,
     });
     engine.current = board;
     return () => board.destroy();
@@ -148,11 +152,18 @@ function App() {
           </section>
           <section>
             <h2>Replay</h2>
+            <label>Speed
+              <select value={replaySpeed} disabled={replayState !== 'idle'}
+                onChange={event => setReplaySpeed(Number(event.currentTarget.value))}>
+                {[0.5, 1, 2, 4].map(speed => <option key={speed} value={speed}>{speed}×</option>)}
+              </select>
+            </label>
+            <p role="status">{replayState === 'playing' ? 'Playing' : replayState === 'paused' ? 'Paused' : 'Ready'}</p>
             <div className="actions">
-              <button disabled={!counts.strokes} onClick={() => engine.current?.play()}>Play</button>
-              <button onClick={() => engine.current?.pauseReplay()}>Pause</button>
-              <button onClick={() => engine.current?.resumeReplay()}>Resume</button>
-              <button onClick={() => engine.current?.stopReplay()}>Stop</button>
+              <button disabled={!counts.strokes || replayState !== 'idle'} onClick={() => engine.current?.play({ speed: replaySpeed })}>Play</button>
+              <button disabled={replayState !== 'playing'} onClick={() => engine.current?.pauseReplay()}>Pause</button>
+              <button disabled={replayState !== 'paused'} onClick={() => engine.current?.resumeReplay()}>Resume</button>
+              <button disabled={replayState === 'idle'} onClick={() => engine.current?.stopReplay()}>Stop</button>
             </div>
           </section>
           <section>
