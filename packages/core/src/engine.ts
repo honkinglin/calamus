@@ -1,3 +1,4 @@
+import { hitsStroke } from './hit-test.js';
 import { replayDuration, replayFrame } from './replay.js';
 import { createSVG } from './export.js';
 import { parseDocument } from './document.js';
@@ -23,6 +24,8 @@ export interface HistoryState {
 
 /** Owns pointer input and renders strokes in document coordinates. */
 export class Calamus {
+  private tool: 'pen' | 'eraser' = 'pen';
+  private erased = new Set<Stroke>();
   private strokes: Stroke[] = [];
   private playback: { elapsed: number; previous: number | null; paused: boolean; speed: number } | null = null;
   private playbackFrame = 0;
@@ -64,6 +67,20 @@ export class Calamus {
     this.observer.observe(canvas);
     this.watchResolution();
     this.resize();
+  }
+
+  setTool(tool: 'pen' | 'eraser'): void {
+    this.assertAlive();
+    if (tool !== 'pen' && tool !== 'eraser') throw new TypeError('Unknown tool.');
+    this.cancel();
+    this.tool = tool;
+  }
+
+  private eraseAt(point: Point): void {
+    for (const stroke of this.strokes) {
+      if (hitsStroke(stroke, point.x, point.y, 10)) this.erased.add(stroke);
+    }
+    this.committedDirty = true;
   }
 
   setBrush(settings: Partial<Brush>): void {
@@ -223,13 +240,18 @@ export class Calamus {
       id: event.pointerId, start: event.timeStamp,
       stroke: { brush: { ...this.brush }, points: [this.sample(event)] },
     };
+    if (this.tool === 'eraser') this.eraseAt(this.active.stroke.points[0]);
     this.schedule();
   };
 
   private move = (event: PointerEvent): void => {
     if (this.active?.id !== event.pointerId) return;
     const samples = event.getCoalescedEvents?.() ?? [];
-    for (const sample of samples.length ? samples : [event]) this.active.stroke.points.push(this.sample(sample));
+    for (const sample of samples.length ? samples : [event]) {
+      const point = this.sample(sample);
+      this.active.stroke.points.push(point);
+      if (this.tool === 'eraser') this.eraseAt(point);
+    }
     this.schedule();
   };
 
@@ -242,12 +264,24 @@ export class Calamus {
       stroke.points.push({ ...end, pressure: last.pressure });
     }
     this.active = null;
+    if (this.tool === 'eraser') {
+      this.eraseAt(end);
+      const remaining = this.strokes.filter(item => !this.erased.has(item));
+      this.erased.clear();
+      if (remaining.length !== this.strokes.length) this.commit(remaining);
+      else this.render();
+      return;
+    }
     this.commit([...this.strokes, stroke]);
     this.options.onStroke?.(structuredClone(stroke));
   };
 
   private cancel = (event?: Event): void => {
     if (event instanceof PointerEvent && event.pointerId !== this.active?.id) return;
+    if (this.erased.size) {
+      this.erased.clear();
+      this.committedDirty = true;
+    }
     const id = this.active?.id;
     this.active = null;
     if (id !== undefined && this.canvas.hasPointerCapture(id)) this.canvas.releasePointerCapture(id);
@@ -298,11 +332,13 @@ export class Calamus {
       if (!cached) return;
       cached.setTransform(this.canvas.width / this.width, 0, 0, this.canvas.height / this.height, 0, 0);
       cached.clearRect(0, 0, this.width, this.height);
-      for (const stroke of this.strokes) drawStroke(cached, stroke);
+      for (const stroke of this.strokes) {
+        if (!this.erased.has(stroke)) drawStroke(cached, stroke);
+      }
       this.committedDirty = false;
     }
     ctx.drawImage(this.committedCanvas, 0, 0, this.width, this.height);
-    if (this.active) drawStroke(ctx, this.active.stroke);
+    if (this.active && this.tool === 'pen') drawStroke(ctx, this.active.stroke);
   }
 
   destroy(): void {

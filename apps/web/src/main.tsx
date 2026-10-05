@@ -8,6 +8,7 @@ import './style.css';
 const palette = ['#253631', '#477c6c', '#b85c4c', '#ba8c46', '#5f6aab'];
 
 function App() {
+  const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
   const [ready, setReady] = useState(false);
   const [saveStatus, setSaveStatus] = useState('Restoring drawing…');
   const [replayState, setReplayState] = useState<ReplayState>('idle');
@@ -68,6 +69,8 @@ function App() {
   useEffect(() => {
     engine.current?.setBrush({ color, size, smoothing, stabilizer, velocityWidth });
   }, [color, size, smoothing, stabilizer, velocityWidth]);
+
+  useEffect(() => { engine.current?.setTool(tool); }, [tool]);
 
   function step(redo: boolean) {
     if (redo) engine.current?.redo();
@@ -167,6 +170,12 @@ function App() {
         </section>
         <aside aria-label="Drawing settings">
           <section>
+            <h2>Tool</h2>
+            <div className="actions">
+              <button aria-pressed={tool === 'pen'} onClick={() => setTool('pen')}>Pen</button>
+              <button aria-pressed={tool === 'eraser'} onClick={() => setTool('eraser')}>Eraser</button>
+            </div>
+            {tool === 'eraser' && <p>Touch a stroke to erase it. Undo restores the whole gesture.</p>}
             <h2>Brush</h2>
             <div className="swatches" role="group" aria-label="Brush color">
               {palette.map(value => <button key={value} className="swatch" style={{ background: value }}
