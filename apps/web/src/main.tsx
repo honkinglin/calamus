@@ -2,11 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Calamus, drawStroke, PAPER } from '@calamus/core';
 import type { ReplayState } from '@calamus/core';
+import { readDrawing, writeDrawing } from './storage';
 import './style.css';
 
 const palette = ['#253631', '#477c6c', '#b85c4c', '#ba8c46', '#5f6aab'];
 
 function App() {
+  const [ready, setReady] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('Restoring drawing…');
   const [replayState, setReplayState] = useState<ReplayState>('idle');
   const [replaySpeed, setReplaySpeed] = useState(1);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -23,12 +26,43 @@ function App() {
 
   useEffect(() => {
     if (!canvas.current) return;
+    let disposed = false;
+    let restoring = true;
+    let savingEnabled = false;
+    let revision = 0;
+    let writes = Promise.resolve();
     const board = new Calamus(canvas.current, {
-      onChange: setCounts,
+      onChange: state => {
+        setCounts(state);
+        if (restoring || !savingEnabled) return;
+        const json = board.exportJSON();
+        const currentRevision = ++revision;
+        setSaveStatus('Saving…');
+        writes = writes.catch(() => {}).then(() => writeDrawing(json)).then(() => {
+          if (!disposed && currentRevision === revision) setSaveStatus('Saved on this device');
+        }).catch(() => {
+          if (!disposed && currentRevision === revision) setSaveStatus('Could not save. Export JSON to keep your drawing.');
+        });
+      },
       onReplayChange: setReplayState,
     });
     engine.current = board;
-    return () => board.destroy();
+    void readDrawing().then(json => {
+      if (disposed) return;
+      if (json !== undefined) board.loadJSON(json);
+      savingEnabled = true;
+      setSaveStatus(json === undefined ? 'Ready to save on this device' : 'Restored from this device');
+    }).catch(() => {
+      if (!disposed) setSaveStatus('Recovery failed. Automatic saving is disabled; export JSON to keep changes.');
+    }).finally(() => {
+      if (disposed) return;
+      restoring = false;
+      setReady(true);
+    });
+    return () => {
+      disposed = true;
+      board.destroy();
+    };
   }, []);
 
   useEffect(() => {
@@ -102,6 +136,7 @@ function App() {
 
   return (
     <>
+      <div inert={!ready}>
       <header>
         <a className="brand" href="./" aria-label="Calamus home"><span aria-hidden="true">✒</span> Calamus</a>
         <div className="actions">
@@ -175,6 +210,8 @@ function App() {
           </section>
         </aside>
       </main>
+      </div>
+      <p className="save-status" role="status">{saveStatus}</p>
     </>
   );
 }
