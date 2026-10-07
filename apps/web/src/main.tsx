@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Calamus, drawStroke, PAPER } from '@calamus/core';
+import { Calamus } from '@calamus/core';
 import type { ReplayState } from '@calamus/core';
 import { readDrawing, writeDrawing } from './storage';
 import './style.css';
@@ -8,6 +8,9 @@ import './style.css';
 const palette = ['#253631', '#477c6c', '#b85c4c', '#ba8c46', '#5f6aab'];
 
 function App() {
+  const [transparentPNG, setTransparentPNG] = useState(false);
+  const [exportScale, setExportScale] = useState(1);
+  const [exporting, setExporting] = useState(false);
   const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
   const [ready, setReady] = useState(false);
   const [saveStatus, setSaveStatus] = useState('Restoring drawing…');
@@ -122,19 +125,26 @@ function App() {
     }
   }
 
-  function exportImage() {
-    const image = document.createElement('canvas');
-    image.width = PAPER.width;
-    image.height = PAPER.height;
-    const ctx = image.getContext('2d');
-    if (!ctx) return;
-    ctx.fillStyle = '#fffdf7';
-    ctx.fillRect(0, 0, image.width, image.height);
-    for (const stroke of engine.current?.getStrokes() ?? []) drawStroke(ctx, stroke);
-    const link = document.createElement('a');
-    link.download = 'calamus.png';
-    link.href = image.toDataURL('image/png');
-    link.click();
+  async function exportImage() {
+    if (!engine.current || exporting) return;
+    setExporting(true);
+    try {
+      const blob = await engine.current.exportPNG({
+        scale: exportScale,
+        background: transparentPNG ? undefined : '#fffdf7',
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = 'calamus.png';
+      link.href = url;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setFileMessage('PNG export ready.');
+    } catch (error) {
+      setFileMessage(error instanceof Error ? error.message : 'Unable to export PNG.');
+    } finally {
+      setExporting(false);
+    }
   }
 
   return (
@@ -148,7 +158,7 @@ function App() {
           <button onClick={() => fileInput.current?.click()}>Import JSON</button>
           <button onClick={exportDocument}>Export JSON</button>
           <button onClick={exportVector}>Export SVG</button>
-          <button className="primary" onClick={exportImage}>Export PNG</button>
+          <button className="primary" disabled={exporting} onClick={() => void exportImage()}>{exporting ? 'Exporting…' : 'Export PNG'}</button>
         </div>
       </header>
       <main>
@@ -193,6 +203,16 @@ function App() {
             </label>
             <label><input type="checkbox" checked={velocityWidth}
               onChange={event => setVelocityWidth(event.currentTarget.checked)} /> Speed-sensitive width</label>
+          </section>
+          <section>
+            <h2>PNG export</h2>
+            <label><input type="checkbox" checked={transparentPNG}
+              onChange={event => setTransparentPNG(event.currentTarget.checked)} /> Transparent background</label>
+            <label>Resolution
+              <select value={exportScale} onChange={event => setExportScale(Number(event.currentTarget.value))}>
+                {[1, 2, 4].map(scale => <option key={scale} value={scale}>{scale}×</option>)}
+              </select>
+            </label>
           </section>
           <section>
             <h2>Replay</h2>

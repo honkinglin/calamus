@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Calamus } from '../dist/index.js';
 
-test('committed geometry is cached, DPR invalidates it and destroy removes observers', () => {
+test('committed geometry is cached, DPR invalidates it and destroy removes observers', async () => {
   const saved = new Map();
   const install = (name, value) => {
     saved.set(name, Object.getOwnPropertyDescriptor(globalThis, name));
@@ -24,9 +24,10 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     style = { touchAction: 'auto' };
     fills = 0;
     ownerDocument = { createElement: () => new Surface() };
+    toBlob(callback) { callback(new Blob(['png'], { type: 'image/png' })); }
     getContext() {
       return {
-        setTransform() {}, clearRect() {}, drawImage() {}, beginPath() {},
+        setTransform() {}, clearRect() {}, drawImage() {}, beginPath() {}, fillRect() {},
         moveTo() {}, lineTo() {}, closePath() {},
         fill: () => { this.fills++; },
       };
@@ -132,6 +133,15 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     assert.equal(engine.state.undo, historyBeforeErase + 1);
     engine.undo();
     assert.equal(engine.state.strokes, 1);
+    const exportedCanvas = new Surface();
+    surface.ownerDocument.createElement = () => exportedCanvas;
+    const png = await engine.exportPNG({ scale: 2 });
+    assert.equal(png.type, 'image/png');
+    assert.equal(exportedCanvas.width, 2000);
+    assert.equal(exportedCanvas.height, 1400);
+    assert.throws(() => engine.exportPNG({ scale: Infinity }), /scale/);
+    exportedCanvas.toBlob = callback => callback(null);
+    await assert.rejects(engine.exportPNG(), /encode/);
     engine.destroy();
     assert.throws(() => engine.undo(), /destroyed/);
     assert.equal(observer.disconnected, true);

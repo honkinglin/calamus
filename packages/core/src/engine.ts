@@ -14,6 +14,11 @@ export interface CalamusOptions {
   onReplayChange?: (state: ReplayState) => void;
 }
 
+export interface PNGExportOptions {
+  scale?: number;
+  background?: string;
+}
+
 export type ReplayState = 'idle' | 'playing' | 'paused';
 
 export interface HistoryState {
@@ -147,6 +152,36 @@ export class Calamus {
 
   get state(): HistoryState {
     return { strokes: this.strokes.length, undo: this.past.length, redo: this.future.length };
+  }
+
+  exportPNG(options: PNGExportOptions = {}): Promise<Blob> {
+    this.assertAlive();
+    const scale = options.scale ?? 1;
+    if (!Number.isFinite(scale) || scale <= 0 || scale > 4) {
+      throw new RangeError('PNG scale must be greater than zero and at most four.');
+    }
+    const width = Math.ceil(this.width * scale);
+    const height = Math.ceil(this.height * scale);
+    if (width * height > 32_000_000 || width > 16384 || height > 16384) {
+      throw new RangeError('PNG output exceeds the supported pixel limit.');
+    }
+    const canvas = this.canvas.ownerDocument.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas 2D is unavailable.');
+    context.setTransform(width / this.width, 0, 0, height / this.height, 0, 0);
+    if (options.background !== undefined) {
+      context.fillStyle = options.background;
+      context.fillRect(0, 0, this.width, this.height);
+    }
+    for (const stroke of this.strokes) drawStroke(context, stroke);
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(blob => {
+        if (blob) resolve(blob);
+        else reject(new Error('Unable to encode PNG.'));
+      }, 'image/png');
+    });
   }
 
   exportSVG(): string {
