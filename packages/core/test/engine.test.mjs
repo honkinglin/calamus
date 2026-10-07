@@ -112,6 +112,26 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     assert.equal(engine.getStrokes()[0].points[0].x, 0);
     engine.setStrokes([]);
     assert.equal(engine.state.redo, 0);
+    engine.setStrokes([{ brush: { color: '#000', size: 5 }, points: [
+      { x: 100, y: 100, time: 0, pressure: null },
+      { x: 200, y: 100, time: 50, pressure: null },
+    ] }]);
+    engine.setTool('eraser');
+    const dispatch = (type, y) => surface.dispatchEvent(new Pointer(type, {
+      pointerId: 2, button: 0, isPrimary: true, clientX: 75, clientY: y, pointerType: 'mouse',
+    }));
+    const historyBeforeErase = engine.state.undo;
+    dispatch('pointerdown', 0);
+    dispatch('pointermove', 100);
+    dispatch('pointercancel', 100);
+    assert.equal(engine.state.strokes, 1);
+    assert.equal(engine.state.undo, historyBeforeErase);
+    dispatch('pointerdown', 0);
+    dispatch('pointerup', 100);
+    assert.equal(engine.state.strokes, 0);
+    assert.equal(engine.state.undo, historyBeforeErase + 1);
+    engine.undo();
+    assert.equal(engine.state.strokes, 1);
     engine.destroy();
     assert.throws(() => engine.undo(), /destroyed/);
     assert.equal(observer.disconnected, true);

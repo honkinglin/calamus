@@ -1,4 +1,4 @@
-import { hitsStroke } from './hit-test.js';
+import { hitsStrokeSweep } from './hit-test.js';
 import { replayDuration, replayFrame } from './replay.js';
 import { createSVG } from './export.js';
 import { parseDocument } from './document.js';
@@ -76,9 +76,9 @@ export class Calamus {
     this.tool = tool;
   }
 
-  private eraseAt(point: Point): void {
+  private eraseAt(point: Point, previous: Point = point): void {
     for (const stroke of this.strokes) {
-      if (hitsStroke(stroke, point.x, point.y, 10)) this.erased.add(stroke);
+      if (!this.erased.has(stroke) && hitsStrokeSweep(stroke, previous, point, 10)) this.erased.add(stroke);
     }
     this.committedDirty = true;
   }
@@ -249,8 +249,9 @@ export class Calamus {
     const samples = event.getCoalescedEvents?.() ?? [];
     for (const sample of samples.length ? samples : [event]) {
       const point = this.sample(sample);
+      const previous = this.active.stroke.points.at(-1)!;
       this.active.stroke.points.push(point);
-      if (this.tool === 'eraser') this.eraseAt(point);
+      if (this.tool === 'eraser') this.eraseAt(point, previous);
     }
     this.schedule();
   };
@@ -265,7 +266,7 @@ export class Calamus {
     }
     this.active = null;
     if (this.tool === 'eraser') {
-      this.eraseAt(end);
+      this.eraseAt(end, last);
       const remaining = this.strokes.filter(item => !this.erased.has(item));
       this.erased.clear();
       if (remaining.length !== this.strokes.length) this.commit(remaining);
