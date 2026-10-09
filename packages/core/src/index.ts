@@ -45,3 +45,5 @@ export { parseDocument } from './document.js';
 export type { CalamusDocument } from './document.js';
 
 export { createSVG } from './export.js';
+
+export type { CropOptions } from './bounds.js';

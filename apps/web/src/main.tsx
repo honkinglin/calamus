@@ -8,6 +8,8 @@ import './style.css';
 const palette = ['#253631', '#477c6c', '#b85c4c', '#ba8c46', '#5f6aab'];
 
 function App() {
+  const [cropExport, setCropExport] = useState(false);
+  const [exportPadding, setExportPadding] = useState(12);
   const [transparentPNG, setTransparentPNG] = useState(false);
   const [exportScale, setExportScale] = useState(1);
   const [exporting, setExporting] = useState(false);
@@ -92,7 +94,7 @@ function App() {
   }, []);
 
   function exportVector() {
-    const svg = engine.current?.exportSVG();
+    const svg = engine.current?.exportSVG({ crop: cropExport, padding: exportPadding });
     if (!svg) return;
     const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
     const link = document.createElement('a');
@@ -131,6 +133,8 @@ function App() {
     try {
       const blob = await engine.current.exportPNG({
         scale: exportScale,
+        crop: cropExport,
+        padding: exportPadding,
         background: transparentPNG ? undefined : '#fffdf7',
       });
       const url = URL.createObjectURL(blob);
@@ -205,7 +209,13 @@ function App() {
               onChange={event => setVelocityWidth(event.currentTarget.checked)} /> Speed-sensitive width</label>
           </section>
           <section>
-            <h2>PNG export</h2>
+            <h2>Export settings</h2>
+            <label><input type="checkbox" checked={cropExport}
+              onChange={event => setCropExport(event.currentTarget.checked)} /> Crop to drawing</label>
+            <label>Padding <output>{exportPadding} px</output>
+              <input type="range" min="0" max="64" disabled={!cropExport} value={exportPadding}
+                onChange={event => setExportPadding(Number(event.currentTarget.value))} />
+            </label>
             <label><input type="checkbox" checked={transparentPNG}
               onChange={event => setTransparentPNG(event.currentTarget.checked)} /> Transparent background</label>
             <label>Resolution

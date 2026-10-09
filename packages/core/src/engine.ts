@@ -1,3 +1,5 @@
+import { exportBounds } from './bounds.js';
+import type { CropOptions } from './bounds.js';
 import { hitsStrokeSweep } from './hit-test.js';
 import { replayDuration, replayFrame } from './replay.js';
 import { createSVG } from './export.js';
@@ -14,7 +16,7 @@ export interface CalamusOptions {
   onReplayChange?: (state: ReplayState) => void;
 }
 
-export interface PNGExportOptions {
+export interface PNGExportOptions extends CropOptions {
   scale?: number;
   background?: string;
 }
@@ -160,8 +162,9 @@ export class Calamus {
     if (!Number.isFinite(scale) || scale <= 0 || scale > 4) {
       throw new RangeError('PNG scale must be greater than zero and at most four.');
     }
-    const width = Math.ceil(this.width * scale);
-    const height = Math.ceil(this.height * scale);
+    const bounds = exportBounds(this.strokes, this.width, this.height, options);
+    const width = Math.ceil(bounds.width * scale);
+    const height = Math.ceil(bounds.height * scale);
     if (width * height > 32_000_000 || width > 16384 || height > 16384) {
       throw new RangeError('PNG output exceeds the supported pixel limit.');
     }
@@ -170,10 +173,11 @@ export class Calamus {
     canvas.height = height;
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Canvas 2D is unavailable.');
-    context.setTransform(width / this.width, 0, 0, height / this.height, 0, 0);
+    context.setTransform(width / bounds.width, 0, 0, height / bounds.height,
+      -bounds.x * width / bounds.width, -bounds.y * height / bounds.height);
     if (options.background !== undefined) {
       context.fillStyle = options.background;
-      context.fillRect(0, 0, this.width, this.height);
+      context.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
     }
     for (const stroke of this.strokes) drawStroke(context, stroke);
     return new Promise((resolve, reject) => {
@@ -184,9 +188,9 @@ export class Calamus {
     });
   }
 
-  exportSVG(): string {
+  exportSVG(options: CropOptions = {}): string {
     this.assertAlive();
-    return createSVG(this.strokes, this.width, this.height);
+    return createSVG(this.strokes, this.width, this.height, options);
   }
 
   exportJSON(): string {

@@ -1,3 +1,5 @@
+import { exportBounds } from './bounds.js';
+import type { CropOptions } from './bounds.js';
 import { createStrokeGeometry } from './geometry.js';
 import type { Stroke } from './index.js';
 
@@ -8,10 +10,11 @@ function escapeAttribute(value: string): string {
 }
 
 /** Export the same filled geometry used by the canvas renderer. */
-export function createSVG(strokes: readonly Stroke[], width: number, height: number): string {
+export function createSVG(strokes: readonly Stroke[], width: number, height: number, options: CropOptions = {}): string {
   if (![width, height].every(value => Number.isFinite(value) && value > 0)) {
     throw new RangeError('SVG dimensions must be positive finite numbers.');
   }
+  const bounds = exportBounds(strokes, width, height, options);
   const paths = strokes.map(stroke => {
     const polygons = createStrokeGeometry(stroke);
     const commands = polygons.map(polygon => polygon.map((point, index) => {
@@ -20,5 +23,5 @@ export function createSVG(strokes: readonly Stroke[], width: number, height: num
     }).join(' ') + ' Z').join(' ');
     return `<path fill="${escapeAttribute(stroke.brush.color)}" fill-rule="nonzero" d="${commands}"/>`;
   });
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${paths.join('')}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${bounds.width}" height="${bounds.height}" viewBox="${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}">${paths.join('')}</svg>`;
 }
