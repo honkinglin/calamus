@@ -190,6 +190,7 @@ function App() {
               <button aria-pressed={tool === 'eraser'} onClick={() => setTool('eraser')}>Eraser</button>
             </div>
             {tool === 'eraser' && <p>Touch a stroke to erase it. Undo restores the whole gesture.</p>}
+            {tool === 'pen' && <>
             <h2>Brush</h2>
             <div className="swatches" role="group" aria-label="Brush color">
               {palette.map(value => <button key={value} className="swatch" style={{ background: value }}
@@ -207,6 +208,7 @@ function App() {
             </label>
             <label><input type="checkbox" checked={velocityWidth}
               onChange={event => setVelocityWidth(event.currentTarget.checked)} /> Speed-sensitive width</label>
+            </>}
           </section>
           <section>
             <h2>Export settings</h2>
