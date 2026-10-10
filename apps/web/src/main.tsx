@@ -8,6 +8,24 @@ import './style.css';
 const palette = ['#253631', '#477c6c', '#b85c4c', '#ba8c46', '#5f6aab'];
 
 function App() {
+  const panel = useRef<HTMLDialogElement>(null);
+  const settingsButton = useRef<HTMLButtonElement>(null);
+  const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 720px)').matches);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 720px)');
+    const update = () => { setMobile(query.matches); setSettingsOpen(false); };
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+  useEffect(() => {
+    const dialog = panel.current;
+    if (!dialog) return;
+    dialog.close();
+    if (!mobile) dialog.show();
+    else if (settingsOpen) dialog.showModal();
+  }, [mobile, settingsOpen]);
+
   const [cropExport, setCropExport] = useState(false);
   const [exportPadding, setExportPadding] = useState(12);
   const [transparentPNG, setTransparentPNG] = useState(false);
@@ -169,6 +187,8 @@ function App() {
         <section className="workspace" aria-label="Drawing workspace">
           <div className="workbar">
             <h1>Untitled drawing</h1>
+            {mobile && <button ref={settingsButton} aria-haspopup="dialog" aria-expanded={settingsOpen}
+              onClick={() => setSettingsOpen(true)}>Settings</button>}
             <div className="actions">
               <button disabled={!counts.undo} onClick={() => step(false)}>Undo</button>
               <button disabled={!counts.redo} onClick={() => step(true)}>Redo</button>
@@ -182,7 +202,13 @@ function App() {
           </div>
           <p className="status">{counts.strokes} {counts.strokes === 1 ? 'stroke' : 'strokes'} <span>1000 × 700 px</span></p>
         </section>
-        <aside aria-label="Drawing settings">
+        <dialog ref={panel} className="settings-panel" aria-label="Drawing settings"
+          onCancel={() => setSettingsOpen(false)}
+          onClose={() => {
+            if (mobile && !panel.current?.open) settingsButton.current?.focus();
+          }}>
+          {mobile && <div className="panel-heading"><h2>Settings</h2>
+            <button onClick={() => setSettingsOpen(false)}>Close</button></div>}
           <section>
             <h2>Tool</h2>
             <div className="actions">
@@ -249,7 +275,7 @@ function App() {
               <button aria-pressed={paper === 'dots'} onClick={() => setPaper('dots')}>Dot grid</button>
             </div>
           </section>
-        </aside>
+        </dialog>
       </main>
       </div>
       <p className="save-status" role="status">{saveStatus}</p>
