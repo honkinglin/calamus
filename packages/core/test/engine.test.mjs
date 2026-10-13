@@ -133,6 +133,30 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     assert.equal(engine.state.undo, historyBeforeErase + 1);
     engine.undo();
     assert.equal(engine.state.strokes, 1);
+    engine.setTool('pen');
+    engine.clear();
+    const input = (type, values = {}) => surface.dispatchEvent(new Pointer(type, {
+      pointerId: 3, button: 0, isPrimary: true, clientX: 0, clientY: 0, pointerType: 'touch', ...values,
+    }));
+    input('pointerdown');
+    input('pointercancel', { pointerId: 4 });
+    input('pointerup');
+    assert.equal(engine.state.strokes, 1, 'other pointers must not cancel the primary touch');
+    assert.equal(engine.getStrokes()[0].points[0].x, 0);
+    assert.equal(engine.getStrokes()[0].points[0].pressure, null);
+    input('pointerdown', { clientX: 50, clientY: 50 });
+    input('pointerup', { clientX: 600, clientY: 400 });
+    const afterRelease = engine.exportJSON();
+    input('pointermove', { clientX: 30 });
+    assert.equal(engine.exportJSON(), afterRelease, 'moves after release must not extend a stroke');
+    assert.equal(engine.getStrokes()[1].points.at(-1).x, 1200);
+    input('pointerdown', { pointerType: 'pen', pressure: 0 });
+    input('pointerup', { pointerType: 'pen', pressure: 0 });
+    assert.equal(engine.getStrokes()[2].points[0].pressure, 0);
+    input('pointerdown');
+    browser.dispatchEvent(new Event('blur'));
+    input('pointerup');
+    assert.equal(engine.state.strokes, 3, 'blur must discard the active gesture');
     const exportedCanvas = new Surface();
     surface.ownerDocument.createElement = () => exportedCanvas;
     const png = await engine.exportPNG({ scale: 2 });
