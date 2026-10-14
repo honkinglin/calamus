@@ -48,3 +48,30 @@ test('geometry handles dots, duplicate samples and sharp reversals', () => {
 test('empty strokes produce empty geometry', () => {
   assert.deepEqual(createStrokeGeometry(stroke([])), []);
 });
+
+test('sharp turns remain finite and causal across smoothing and stabilizer settings', () => {
+  const points = [
+    { x: 0, y: 0, time: 0, pressure: null },
+    { x: 40, y: 0, time: 10, pressure: null },
+    { x: 40, y: 40, time: 20, pressure: null },
+    { x: 0, y: 40, time: 30, pressure: null },
+    { x: 0, y: 0, time: 40, pressure: null },
+  ];
+  for (const smoothing of [0, 0.55, 1]) {
+    for (const stabilizer of [0, 12, 24]) {
+      const brush = { smoothing, stabilizer, velocityWidth: true };
+      const complete = processStroke(stroke(points, brush));
+      assert.ok(complete.every(value => Number.isFinite(value.x) && Number.isFinite(value.y) && value.width > 0));
+      for (let count = 1; count <= points.length; count++) {
+        assert.deepEqual(processStroke(stroke(points.slice(0, count), brush)), complete.slice(0, count));
+      }
+    }
+  }
+});
+
+test('processing an unrelated stroke cannot change a later stroke', () => {
+  const input = stroke([point(0, 0), point(100, 30)], { smoothing: 0.55, stabilizer: 12 });
+  const expected = processStroke(input);
+  processStroke(stroke([point(999, 0, 1), point(-50, 20, 0)]));
+  assert.deepEqual(processStroke(input), expected);
+});
