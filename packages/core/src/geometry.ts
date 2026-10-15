@@ -6,6 +6,20 @@ export interface Vertex {
   y: number;
 }
 
+const circleTemplates = new Map<number, readonly Vertex[]>();
+
+function unitCircle(steps: number): readonly Vertex[] {
+  const cached = circleTemplates.get(steps);
+  if (cached) return cached;
+  const vertices: Vertex[] = [];
+  for (let step = 0; step < steps; step++) {
+    const angle = step * Math.PI * 2 / steps;
+    vertices.push({ x: Math.cos(angle), y: Math.sin(angle) });
+  }
+  circleTemplates.set(steps, vertices);
+  return vertices;
+}
+
 /** Clockwise polygons share a single fill to avoid alpha seams at overlaps. */
 export function createStrokeGeometry(stroke: Stroke): Vertex[][] {
   const points = processStroke(stroke);
@@ -15,9 +29,8 @@ export function createStrokeGeometry(stroke: Stroke): Vertex[][] {
     const radius = point.width / 2;
     const steps = Math.max(12, Math.min(64, Math.ceil(Math.PI * Math.sqrt(radius * 8))));
     const circle: Vertex[] = [];
-    for (let step = 0; step < steps; step++) {
-      const angle = step * Math.PI * 2 / steps;
-      circle.push({ x: point.x + Math.cos(angle) * radius, y: point.y + Math.sin(angle) * radius });
+    for (const vertex of unitCircle(steps)) {
+      circle.push({ x: point.x + vertex.x * radius, y: point.y + vertex.y * radius });
     }
     polygons.push(circle);
     const previous = points[index - 1];

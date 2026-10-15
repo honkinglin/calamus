@@ -75,3 +75,19 @@ test('processing an unrelated stroke cannot change a later stroke', () => {
   processStroke(stroke([point(999, 0, 1), point(-50, 20, 0)]));
   assert.deepEqual(processStroke(input), expected);
 });
+
+test('cached circle templates preserve exact geometry and cannot be mutated by callers', () => {
+  for (const size of [1, 6, 48, 4096]) {
+    const input = stroke([{ x: 13, y: -7, time: 0, pressure: null }], { size });
+    const radius = size / 2;
+    const steps = Math.max(12, Math.min(64, Math.ceil(Math.PI * Math.sqrt(radius * 8))));
+    const expected = Array.from({ length: steps }, (_, index) => ({
+      x: 13 + Math.cos(index * Math.PI * 2 / steps) * radius,
+      y: -7 + Math.sin(index * Math.PI * 2 / steps) * radius,
+    }));
+    const output = createStrokeGeometry(input);
+    assert.deepEqual(output[0], expected);
+    output[0][0].x = 99999;
+    assert.deepEqual(createStrokeGeometry(input)[0], expected);
+  }
+});
