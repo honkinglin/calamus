@@ -3,7 +3,7 @@ import type { CropOptions } from './bounds.js';
 import { hitsStrokeSweep } from './hit-test.js';
 import { replayDuration, replayFrame } from './replay.js';
 import { createSVG } from './export.js';
-import { parseDocument } from './document.js';
+import { parseDocument, validateDocument } from './document.js';
 import { drawStroke, PAPER } from './index.js';
 import type { Brush, Point, Stroke } from './index.js';
 
@@ -198,13 +198,20 @@ export class Calamus {
     return JSON.stringify({ schemaVersion: 1, width: this.width, height: this.height, strokes: this.strokes });
   }
 
-  loadJSON(json: string): void {
+  loadJSON(json: string, options: { resetHistory?: boolean } = {}): void {
     this.assertAlive();
     const document = parseDocument(json);
     if (document.width !== this.width || document.height !== this.height) {
       throw new RangeError('Document dimensions must match this canvas.');
     }
-    this.setStrokes(document.strokes);
+    if (options.resetHistory) {
+      this.stopReplay();
+      this.cancel();
+      this.strokes = document.strokes;
+      this.past = [];
+      this.future = [];
+      this.changed();
+    } else this.setStrokes(document.strokes);
   }
 
   getStrokes(): Stroke[] {
@@ -213,7 +220,9 @@ export class Calamus {
 
   setStrokes(strokes: Stroke[]): void {
     this.assertAlive();
-    const replacement = structuredClone(strokes);
+    const replacement = validateDocument({
+      schemaVersion: 1, width: this.width, height: this.height, strokes,
+    }).strokes;
     this.stopReplay();
     this.cancel();
     this.commit(replacement);

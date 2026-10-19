@@ -73,7 +73,7 @@ function App() {
     engine.current = board;
     void readDrawing().then(json => {
       if (disposed) return;
-      if (json !== undefined) board.loadJSON(json);
+      if (json !== undefined) board.loadJSON(json, { resetHistory: true });
       savingEnabled = true;
       setSaveStatus(json === undefined ? 'Ready to save on this device' : 'Restored from this device');
     }).catch(() => {

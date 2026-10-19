@@ -22,7 +22,11 @@ function number(value: unknown, min: number, max: number): number {
 /** Validate and copy only supported fields before changing the live document. */
 export function parseDocument(input: string): CalamusDocument {
   if (input.length > 20_000_000) throw new RangeError('Document exceeds 20 MB.');
-  const data = record(JSON.parse(input));
+  return validateDocument(JSON.parse(input));
+}
+
+export function validateDocument(input: unknown): CalamusDocument {
+  const data = record(input);
   if (data.schemaVersion !== 1) throw new TypeError('Unsupported document version.');
   const width = number(data.width, 1, 32768);
   const height = number(data.height, 1, 32768);
