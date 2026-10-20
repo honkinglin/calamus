@@ -8,6 +8,8 @@ import './style.css';
 const palette = ['#253631', '#477c6c', '#b85c4c', '#ba8c46', '#5f6aab'];
 
 function App() {
+  const documentRevision = useRef(0);
+  const importRequest = useRef(0);
   const panel = useRef<HTMLDialogElement>(null);
   const settingsButton = useRef<HTMLButtonElement>(null);
   const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 720px)').matches);
@@ -57,6 +59,7 @@ function App() {
     let writes = Promise.resolve();
     const board = new Calamus(canvas.current, {
       onChange: state => {
+        documentRevision.current++;
         setCounts(state);
         if (restoring || !savingEnabled) return;
         const json = board.exportJSON();
@@ -85,6 +88,8 @@ function App() {
     });
     return () => {
       disposed = true;
+      importRequest.current++;
+      engine.current = null;
       board.destroy();
     };
   }, []);
@@ -102,14 +107,26 @@ function App() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.key.toLowerCase() !== 'z') return;
-      if (event.target instanceof HTMLElement && event.target.closest('input, textarea, select, [contenteditable="true"]')) return;
-      event.preventDefault();
-      step(event.shiftKey);
+      if (!ready || event.isComposing || event.repeat || event.altKey) return;
+      if (event.target instanceof HTMLElement &&
+          (event.target.isContentEditable || event.target.closest('input, textarea, select'))) return;
+      const key = event.key.toLowerCase();
+      if (event.metaKey || event.ctrlKey) {
+        if (key === 'z') {
+          event.preventDefault();
+          step(event.shiftKey);
+        } else if (key === 'y' && event.ctrlKey && !event.metaKey && !event.shiftKey) {
+          event.preventDefault();
+          step(true);
+        }
+      } else if (!event.shiftKey && (key === 'b' || key === 'e')) {
+        event.preventDefault();
+        setTool(key === 'b' ? 'pen' : 'eraser');
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [ready]);
 
   function exportVector() {
     const svg = engine.current?.exportSVG({ crop: cropExport, padding: exportPadding });
@@ -134,14 +151,25 @@ function App() {
   }
 
   async function importDocument(file: File | undefined) {
-    if (!file) return;
+    if (!file || !engine.current) return;
+    const request = ++importRequest.current;
+    const revision = documentRevision.current;
+    const board = engine.current;
+    setFileMessage('Reading drawing…');
     try {
       if (file.size > 20_000_000) throw new Error('Document exceeds 20 MB.');
       const content = await file.text();
-      engine.current?.loadJSON(content);
+      if (request !== importRequest.current || engine.current !== board) return;
+      if (documentRevision.current !== revision) {
+        setFileMessage('Drawing changed while reading the file. Import again to replace it.');
+        return;
+      }
+      board.loadJSON(content);
       setFileMessage('Drawing imported. Use Undo to restore your previous drawing.');
     } catch (error) {
-      setFileMessage(error instanceof Error ? error.message : 'Unable to import drawing.');
+      if (request === importRequest.current && engine.current === board) {
+        setFileMessage(error instanceof Error ? error.message : 'Unable to import drawing.');
+      }
     }
   }
 
@@ -197,7 +225,7 @@ function App() {
           </div>
           <p role="status">{fileMessage}</p>
           <div className={'paper ' + paper}>
-            <canvas ref={canvas} aria-label="Drawing canvas" />
+            <canvas ref={canvas} aria-label="Drawing canvas" onPointerDownCapture={() => { documentRevision.current++; }} />
             {!counts.strokes && <span className="paper-hint">Draw anywhere to begin</span>}
           </div>
           <p className="status">{counts.strokes} {counts.strokes === 1 ? 'stroke' : 'strokes'} <span>1000 × 700 px</span></p>
@@ -212,8 +240,8 @@ function App() {
           <section>
             <h2>Tool</h2>
             <div className="actions">
-              <button aria-pressed={tool === 'pen'} onClick={() => setTool('pen')}>Pen</button>
-              <button aria-pressed={tool === 'eraser'} onClick={() => setTool('eraser')}>Eraser</button>
+              <button title="Pen (B)" aria-keyshortcuts="B" aria-pressed={tool === 'pen'} onClick={() => setTool('pen')}>Pen</button>
+              <button title="Eraser (E)" aria-keyshortcuts="E" aria-pressed={tool === 'eraser'} onClick={() => setTool('eraser')}>Eraser</button>
             </div>
             {tool === 'eraser' && <p>Touch a stroke to erase it. Undo restores the whole gesture.</p>}
             {tool === 'pen' && <>
