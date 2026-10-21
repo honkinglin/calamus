@@ -3,13 +3,14 @@ import { createRoot } from 'react-dom/client';
 import { Calamus } from '@calamus/core';
 import type { ReplayState } from '@calamus/core';
 import { readDrawing, writeDrawing } from './storage';
+import { createImportController } from './import-controller';
 import './style.css';
 
 const palette = ['#253631', '#477c6c', '#b85c4c', '#ba8c46', '#5f6aab'];
 
 function App() {
   const documentRevision = useRef(0);
-  const importRequest = useRef(0);
+  const importer = useRef<ReturnType<typeof createImportController> | null>(null);
   const panel = useRef<HTMLDialogElement>(null);
   const settingsButton = useRef<HTMLButtonElement>(null);
   const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 720px)').matches);
@@ -74,6 +75,12 @@ function App() {
       onReplayChange: setReplayState,
     });
     engine.current = board;
+    const imports = createImportController({
+      revision: () => documentRevision.current,
+      load: json => board.loadJSON(json),
+      notify: setFileMessage,
+    });
+    importer.current = imports;
     void readDrawing().then(json => {
       if (disposed) return;
       if (json !== undefined) board.loadJSON(json, { resetHistory: true });
@@ -88,7 +95,8 @@ function App() {
     });
     return () => {
       disposed = true;
-      importRequest.current++;
+      imports.dispose();
+      importer.current = null;
       engine.current = null;
       board.destroy();
     };
@@ -128,48 +136,26 @@ function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [ready]);
 
-  function exportVector() {
-    const svg = engine.current?.exportSVG({ crop: cropExport, padding: exportPadding });
-    if (!svg) return;
-    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'calamus.svg';
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-
-  function exportDocument() {
-    const json = engine.current?.exportJSON();
-    if (!json) return;
-    const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'calamus.json';
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-
-  async function importDocument(file: File | undefined) {
-    if (!file || !engine.current) return;
-    const request = ++importRequest.current;
-    const revision = documentRevision.current;
+  function exportFile(format: 'SVG' | 'JSON') {
     const board = engine.current;
-    setFileMessage('Reading drawing…');
+    if (!board) return;
     try {
-      if (file.size > 20_000_000) throw new Error('Document exceeds 20 MB.');
-      const content = await file.text();
-      if (request !== importRequest.current || engine.current !== board) return;
-      if (documentRevision.current !== revision) {
-        setFileMessage('Drawing changed while reading the file. Import again to replace it.');
-        return;
+      const content = format === 'SVG'
+        ? board.exportSVG({ crop: cropExport, padding: exportPadding })
+        : board.exportJSON();
+      const blob = new Blob([content], { type: format === 'SVG' ? 'image/svg+xml' : 'application/json' });
+      const url = URL.createObjectURL(blob);
+      try {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `calamus.${format.toLowerCase()}`;
+        link.click();
+      } finally {
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
-      board.loadJSON(content);
-      setFileMessage('Drawing imported. Use Undo to restore your previous drawing.');
+      setFileMessage(`${format} export ready.`);
     } catch (error) {
-      if (request === importRequest.current && engine.current === board) {
-        setFileMessage(error instanceof Error ? error.message : 'Unable to import drawing.');
-      }
+      setFileMessage(error instanceof Error ? error.message : `Unable to export ${format}.`);
     }
   }
 
@@ -204,10 +190,10 @@ function App() {
         <a className="brand" href="./" aria-label="Calamus home"><span aria-hidden="true">✒</span> Calamus</a>
         <div className="actions">
           <input ref={fileInput} type="file" accept=".json,application/json" hidden
-            onChange={event => { void importDocument(event.currentTarget.files?.[0]); event.currentTarget.value = ''; }} />
+            onChange={event => { const file = event.currentTarget.files?.[0]; if (file) void importer.current?.read(file); event.currentTarget.value = ''; }} />
           <button onClick={() => fileInput.current?.click()}>Import JSON</button>
-          <button onClick={exportDocument}>Export JSON</button>
-          <button onClick={exportVector}>Export SVG</button>
+          <button onClick={() => exportFile('JSON')}>Export JSON</button>
+          <button onClick={() => exportFile('SVG')}>Export SVG</button>
           <button className="primary" disabled={exporting} onClick={() => void exportImage()}>{exporting ? 'Exporting…' : 'Export PNG'}</button>
         </div>
       </header>
