@@ -1,15 +1,33 @@
 import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Calamus } from '@calamus/core';
+import { Calamus, parseDocument } from '@calamus/core';
 import type { ReplayState } from '@calamus/core';
-import { readDrawing, writeDrawing } from './storage';
+import { drawingStore } from './storage';
+import { createLibrary } from './library';
+import type { Drawing } from './library';
 import { createImportController } from './import-controller';
 import './style.css';
+
+const emptyDocument = JSON.stringify({ schemaVersion: 1, width: 1000, height: 700, strokes: [] });
 
 const palette = ['#253631', '#477c6c', '#b85c4c', '#ba8c46', '#5f6aab'];
 
 function App() {
   const documentRevision = useRef(0);
+  const library = useRef<ReturnType<typeof createLibrary> | null>(null);
+  const changingDrawing = useRef(false);
+  const loadingDocument = useRef(false);
+  const libraryDialog = useRef<HTMLDialogElement>(null);
+  const libraryButton = useRef<HTMLButtonElement>(null);
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  const [drawings, setDrawings] = useState<Drawing[]>([]);
+  const [activeDrawing, setActiveDrawing] = useState<Drawing | null>(null);
+  const [drawingName, setDrawingName] = useState('');
+  const [libraryMessage, setLibraryMessage] = useState('');
+  useEffect(() => {
+    if (libraryOpen) libraryDialog.current?.showModal();
+    else libraryDialog.current?.close();
+  }, [libraryOpen]);
   const importer = useRef<ReturnType<typeof createImportController> | null>(null);
   const panel = useRef<HTMLDialogElement>(null);
   const settingsButton = useRef<HTMLButtonElement>(null);
@@ -57,16 +75,17 @@ function App() {
     let restoring = true;
     let savingEnabled = false;
     let revision = 0;
-    let writes = Promise.resolve();
+    const collection = createLibrary(drawingStore);
+    library.current = collection;
     const board = new Calamus(canvas.current, {
       onChange: state => {
         documentRevision.current++;
         setCounts(state);
-        if (restoring || !savingEnabled) return;
+        if (restoring || loadingDocument.current || !savingEnabled) return;
         const json = board.exportJSON();
         const currentRevision = ++revision;
         setSaveStatus('Saving…');
-        writes = writes.catch(() => {}).then(() => writeDrawing(json)).then(() => {
+        void collection.save(json).then(() => {
           if (!disposed && currentRevision === revision) setSaveStatus('Saved on this device');
         }).catch(() => {
           if (!disposed && currentRevision === revision) setSaveStatus('Could not save. Export JSON to keep your drawing.');
@@ -81,11 +100,14 @@ function App() {
       notify: setFileMessage,
     });
     importer.current = imports;
-    void readDrawing().then(json => {
+    void collection.restore(emptyDocument).then(drawing => {
       if (disposed) return;
-      if (json !== undefined) board.loadJSON(json, { resetHistory: true });
+      board.loadJSON(drawing.json, { resetHistory: true });
+      setActiveDrawing(drawing);
+      setDrawingName(drawing.name);
+      setDrawings(collection.list());
       savingEnabled = true;
-      setSaveStatus(json === undefined ? 'Ready to save on this device' : 'Restored from this device');
+      setSaveStatus('Restored from this device');
     }).catch(() => {
       if (!disposed) setSaveStatus('Recovery failed. Automatic saving is disabled; export JSON to keep changes.');
     }).finally(() => {
@@ -97,6 +119,7 @@ function App() {
       disposed = true;
       imports.dispose();
       importer.current = null;
+      library.current = null;
       engine.current = null;
       board.destroy();
     };
@@ -108,6 +131,49 @@ function App() {
 
   useEffect(() => { engine.current?.setTool(tool); }, [tool]);
 
+  async function changeDrawing(action: 'create' | 'open' | 'rename', id?: string) {
+    const collection = library.current;
+    const board = engine.current;
+    if (!collection || !board || !activeDrawing || changingDrawing.current) return;
+    changingDrawing.current = true;
+    documentRevision.current++;
+    setReady(false);
+    setLibraryMessage('Saving drawing…');
+    try {
+      if (action === 'open') {
+        const target = collection.list().find(item => item.id === id);
+        if (!target) throw new Error('Drawing no longer exists.');
+        const parsed = parseDocument(target.json);
+        if (parsed.width !== 1000 || parsed.height !== 700) throw new Error('Unsupported drawing dimensions.');
+      }
+      // Retry the latest snapshot before leaving; a failed save keeps this drawing open.
+      await collection.save(board.exportJSON());
+      const drawing = action === 'create' ? await collection.create(emptyDocument)
+        : action === 'rename' ? await collection.rename(drawingName)
+        : await collection.open(id!);
+      if (engine.current !== board) return;
+      if (action !== 'rename') {
+        loadingDocument.current = true;
+        try { board.loadJSON(drawing.json, { resetHistory: true }); }
+        finally { loadingDocument.current = false; }
+        setFileMessage('');
+      }
+      setActiveDrawing(drawing);
+      setDrawingName(drawing.name);
+      setSaveStatus('Saved on this device');
+      setLibraryMessage(action === 'rename' ? 'Drawing renamed.' : 'Drawing opened.');
+      if (action !== 'rename') setLibraryOpen(false);
+    } catch (error) {
+      setLibraryMessage(error instanceof Error ? error.message : 'Unable to update drawings.');
+    } finally {
+      changingDrawing.current = false;
+      if (engine.current === board) {
+        setDrawings(collection.list());
+        setReady(true);
+      }
+    }
+  }
+
   function step(redo: boolean) {
     if (redo) engine.current?.redo();
     else engine.current?.undo();
@@ -115,7 +181,7 @@ function App() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!ready || event.isComposing || event.repeat || event.altKey) return;
+      if (!ready || libraryOpen || event.isComposing || event.repeat || event.altKey) return;
       if (event.target instanceof HTMLElement &&
           (event.target.isContentEditable || event.target.closest('input, textarea, select'))) return;
       const key = event.key.toLowerCase();
@@ -134,7 +200,7 @@ function App() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [ready]);
+  }, [ready, libraryOpen]);
 
   function exportFile(format: 'SVG' | 'JSON') {
     const board = engine.current;
@@ -200,7 +266,9 @@ function App() {
       <main>
         <section className="workspace" aria-label="Drawing workspace">
           <div className="workbar">
-            <h1>Untitled drawing</h1>
+            <h1>{activeDrawing?.name ?? 'Untitled drawing'}</h1>
+            <button ref={libraryButton} disabled={!activeDrawing} aria-haspopup="dialog"
+              onClick={() => { setDrawingName(activeDrawing?.name ?? ''); setLibraryMessage(''); setLibraryOpen(true); }}>Drawings</button>
             {mobile && <button ref={settingsButton} aria-haspopup="dialog" aria-expanded={settingsOpen}
               onClick={() => setSettingsOpen(true)}>Settings</button>}
             <div className="actions">
@@ -292,6 +360,30 @@ function App() {
         </dialog>
       </main>
       </div>
+      <dialog ref={libraryDialog} className="library-panel" aria-labelledby="library-title"
+        onCancel={event => { if (changingDrawing.current) event.preventDefault(); else setLibraryOpen(false); }}
+        onClose={() => { setLibraryOpen(false); libraryButton.current?.focus(); }}>
+        <div className="panel-heading"><h2 id="library-title">Your drawings</h2>
+          <button disabled={!ready} onClick={() => setLibraryOpen(false)}>Close</button></div>
+        <p>Saved on this device. Export JSON to keep a backup.</p>
+        <button className="primary" disabled={!ready} onClick={() => void changeDrawing('create')}>New drawing</button>
+        <ul className="drawing-list">
+          {drawings.map(drawing => <li key={drawing.id}>
+            <button disabled={!ready || drawing.id === activeDrawing?.id}
+              aria-current={drawing.id === activeDrawing?.id ? 'true' : undefined}
+              onClick={() => void changeDrawing('open', drawing.id)}>
+              <span>{drawing.name}</span>{drawing.id === activeDrawing?.id && <small>Current</small>}
+            </button>
+          </li>)}
+        </ul>
+        <form onSubmit={event => { event.preventDefault(); void changeDrawing('rename'); }}>
+          <label htmlFor="drawing-name">Current drawing name</label>
+          <div className="rename-row"><input id="drawing-name" value={drawingName} maxLength={80} required disabled={!ready}
+            onChange={event => setDrawingName(event.currentTarget.value)} />
+            <button disabled={!ready || !drawingName.trim() || drawingName.trim() === activeDrawing?.name}>Rename</button></div>
+        </form>
+        <p role="status">{libraryMessage}</p>
+      </dialog>
       <p className="save-status" role="status">{saveStatus}</p>
     </>
   );
