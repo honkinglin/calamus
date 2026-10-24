@@ -1,8 +1,9 @@
-export type Drawing = { id: string; name: string; json: string; updatedAt: number };
+export type Drawing = { id: string; name: string; json: string; updatedAt: number; deletedAt?: number };
 export interface DrawingStore {
   read(): Promise<{ drawings: Drawing[]; activeId?: string }>;
   save(drawing: Drawing): Promise<void>;
   select(id: string): Promise<void>;
+  replaceSelection(drawing: Drawing, next: Drawing): Promise<void>;
 }
 
 /** Each queued write owns its document ID and snapshot. */
@@ -22,16 +23,17 @@ export function createLibrary(store: DrawingStore) {
   };
   return {
     current,
-    list: () => drawings.map(item => ({ ...item })),
+    list: () => drawings.filter(item => item.deletedAt === undefined).map(item => ({ ...item })),
+    trash: () => drawings.filter(item => item.deletedAt !== undefined).map(item => ({ ...item })),
     async restore(emptyJSON: string) {
       const saved = await store.read();
       drawings = saved.drawings;
-      if (!drawings.length) {
+      if (!drawings.some(item => item.deletedAt === undefined)) {
         const drawing = { id: crypto.randomUUID(), name: 'Untitled drawing', json: emptyJSON, updatedAt: Date.now() };
         await store.save(drawing);
-        drawings = [drawing];
+        drawings = [...drawings, drawing];
       }
-      activeId = drawings.some(item => item.id === saved.activeId) ? saved.activeId! : drawings[0].id;
+      activeId = drawings.some(item => item.id === saved.activeId && item.deletedAt === undefined) ? saved.activeId! : drawings.find(item => item.deletedAt === undefined)!.id;
       await store.select(activeId);
       return current();
     },
@@ -42,7 +44,7 @@ export function createLibrary(store: DrawingStore) {
     },
     async open(id: string) {
       await queue;
-      const drawing = drawings.find(item => item.id === id);
+      const drawing = drawings.find(item => item.id === id && item.deletedAt === undefined);
       if (!drawing) throw new Error('Drawing no longer exists.');
       await store.select(id);
       activeId = id;
@@ -57,6 +59,35 @@ export function createLibrary(store: DrawingStore) {
       await store.select(drawing.id);
       activeId = drawing.id;
       return { ...drawing };
+    },
+    async duplicate() {
+      await queue;
+      const source = current();
+      const drawing = { ...source, id: crypto.randomUUID(), name: `${source.name.slice(0, 73)} (copy)`, updatedAt: Date.now() };
+      await store.save(drawing);
+      drawings = [...drawings, drawing];
+      await store.select(drawing.id);
+      activeId = drawing.id;
+      return { ...drawing };
+    },
+    async remove(emptyJSON: string) {
+      await queue;
+      const removed = { ...current(), deletedAt: Date.now() };
+      // Open a known-valid blank drawing instead of risking a corrupt successor.
+      const next = { id: crypto.randomUUID(), name: 'Untitled drawing', json: emptyJSON, updatedAt: Date.now() };
+      await store.replaceSelection(removed, next);
+      drawings = [...drawings.map(item => item.id === removed.id ? removed : item), next];
+      activeId = next.id;
+      return { ...next };
+    },
+    async recover(id: string) {
+      await queue;
+      const source = drawings.find(item => item.id === id && item.deletedAt !== undefined);
+      if (!source) throw new Error('Deleted drawing no longer exists.');
+      const { deletedAt, ...drawing } = source;
+      await store.save(drawing);
+      drawings = drawings.map(item => item.id === id ? drawing : item);
+      return current();
     },
     async rename(name: string) {
       const cleaned = name.trim();

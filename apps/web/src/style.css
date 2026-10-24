@@ -106,3 +106,9 @@ select:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3
 .rename-row { display: flex; gap: 8px; margin-top: 8px; }
 .rename-row input { min-width: 0; width: 100%; padding: 8px; font: inherit; color: inherit; background: var(--color-paper); border: 1px solid var(--color-border); border-radius: 8px; }
 body:has(.library-panel:modal) { overflow: hidden; }
+.drawing-thumbnail, .thumbnail-fallback { flex: 0 0 80px; width: 80px; height: 56px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-paper); object-fit: contain; }
+.drawing-list button > span:not(.thumbnail-fallback) { flex: 1; }
+.drawing-list li { min-width: 0; }
+.library-actions { margin-top: 20px; }
+.library-panel section .drawing-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.library-panel section .drawing-list button { width: auto; }

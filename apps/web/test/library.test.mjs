@@ -9,6 +9,9 @@ function fixture(initial = [], activeId) {
     read: async () => ({ drawings: [...records.values()].map(item => ({ ...item })), activeId: selected }),
     save: async drawing => { records.set(drawing.id, { ...drawing }); },
     select: async id => { selected = id; },
+    replaceSelection: async (drawing, next) => {
+      records.set(drawing.id, { ...drawing }); records.set(next.id, { ...next }); selected = next.id;
+    },
   };
   return { store, records, library: createLibrary(store) };
 }
@@ -98,4 +101,57 @@ test('saved new drawing remains discoverable if selecting it fails', async () =>
   assert.equal(f.library.current().id, 'legacy');
   assert.equal(f.library.list().length, 2);
   assert.equal(f.records.size, 2);
+});
+
+test('duplicate uses a new ID and edits never modify the source', async () => {
+  const f = fixture([original], 'legacy');
+  await f.library.restore('empty');
+  await f.library.save('latest');
+  const copy = await f.library.duplicate();
+  assert.notEqual(copy.id, original.id);
+  assert.equal(copy.name, 'Original (copy)');
+  assert.equal(copy.json, 'latest');
+  await f.library.save('copy edited');
+  assert.equal(f.records.get(original.id).json, 'latest');
+  assert.equal(f.records.get(copy.id).json, 'copy edited');
+});
+test('delete persists recoverable content and opens a blank drawing atomically', async () => {
+  const f = fixture([original], 'legacy');
+  await f.library.restore('empty');
+  const next = await f.library.remove('empty');
+  assert.equal(next.json, 'empty');
+  assert.equal(f.library.list().length, 1);
+  assert.equal(f.library.trash()[0].json, 'original');
+  const restored = createLibrary(f.store);
+  assert.equal((await restored.restore('empty')).id, next.id);
+  assert.equal(restored.trash()[0].id, 'legacy');
+  await restored.recover('legacy');
+  assert.equal(restored.current().id, next.id);
+  assert.equal(restored.trash().length, 0);
+  assert.equal((await restored.open('legacy')).json, 'original');
+});
+test('failed delete leaves both current drawing and lists unchanged', async () => {
+  const f = fixture([original], 'legacy');
+  await f.library.restore('empty');
+  f.store.replaceSelection = async () => { throw new Error('transaction failed'); };
+  await assert.rejects(f.library.remove('empty'), /transaction failed/);
+  assert.deepEqual(f.library.current(), original);
+  assert.equal(f.library.trash().length, 0);
+  assert.equal(f.library.list().length, 1);
+});
+test('failed recovery retains the deleted drawing', async () => {
+  const f = fixture([original], 'legacy');
+  await f.library.restore('empty');
+  await f.library.remove('empty');
+  f.store.save = async () => { throw new Error('quota'); };
+  await assert.rejects(f.library.recover('legacy'), /quota/);
+  assert.equal(f.library.trash().length, 1);
+  await assert.rejects(f.library.open('legacy'), /no longer exists/);
+});
+test('restore never activates deleted data and keeps it recoverable', async () => {
+  const f = fixture([{ ...original, deletedAt: 1 }], 'legacy');
+  const current = await f.library.restore('empty');
+  assert.notEqual(current.id, 'legacy');
+  assert.equal(f.library.trash().length, 1);
+  assert.equal(f.library.list().length, 1);
 });

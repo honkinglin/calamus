@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Calamus, parseDocument } from '@calamus/core';
 import type { ReplayState } from '@calamus/core';
@@ -6,6 +6,7 @@ import { drawingStore } from './storage';
 import { createLibrary } from './library';
 import type { Drawing } from './library';
 import { createImportController } from './import-controller';
+import { createThumbnail } from './thumbnail';
 import './style.css';
 
 const emptyDocument = JSON.stringify({ schemaVersion: 1, width: 1000, height: 700, strokes: [] });
@@ -24,6 +25,10 @@ function App() {
   const [activeDrawing, setActiveDrawing] = useState<Drawing | null>(null);
   const [drawingName, setDrawingName] = useState('');
   const [libraryMessage, setLibraryMessage] = useState('');
+  const [trash, setTrash] = useState<Drawing[]>([]);
+  const thumbnails = useMemo(() => libraryOpen
+    ? new Map(drawings.map(drawing => [drawing.id, createThumbnail(drawing.json)]))
+    : new Map<string, string | undefined>(), [libraryOpen, drawings]);
   useEffect(() => {
     if (libraryOpen) libraryDialog.current?.showModal();
     else libraryDialog.current?.close();
@@ -55,6 +60,12 @@ function App() {
   const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
   const [ready, setReady] = useState(false);
   const [saveStatus, setSaveStatus] = useState('Restoring drawing…');
+  useEffect(() => {
+    const dialog = libraryDialog.current;
+    if (ready && libraryOpen && dialog?.open && !dialog.contains(document.activeElement)) {
+      dialog.querySelector<HTMLButtonElement>('button')?.focus();
+    }
+  }, [ready, libraryOpen]);
   const [replayState, setReplayState] = useState<ReplayState>('idle');
   const [replaySpeed, setReplaySpeed] = useState(1);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -106,6 +117,7 @@ function App() {
       setActiveDrawing(drawing);
       setDrawingName(drawing.name);
       setDrawings(collection.list());
+      setTrash(collection.trash());
       savingEnabled = true;
       setSaveStatus('Restored from this device');
     }).catch(() => {
@@ -131,7 +143,7 @@ function App() {
 
   useEffect(() => { engine.current?.setTool(tool); }, [tool]);
 
-  async function changeDrawing(action: 'create' | 'open' | 'rename', id?: string) {
+  async function changeDrawing(action: 'create' | 'open' | 'rename' | 'duplicate' | 'remove' | 'recover', id?: string) {
     const collection = library.current;
     const board = engine.current;
     if (!collection || !board || !activeDrawing || changingDrawing.current) return;
@@ -150,9 +162,12 @@ function App() {
       await collection.save(board.exportJSON());
       const drawing = action === 'create' ? await collection.create(emptyDocument)
         : action === 'rename' ? await collection.rename(drawingName)
+        : action === 'duplicate' ? await collection.duplicate()
+        : action === 'remove' ? await collection.remove(emptyDocument)
+        : action === 'recover' ? await collection.recover(id!)
         : await collection.open(id!);
       if (engine.current !== board) return;
-      if (action !== 'rename') {
+      if (action !== 'rename' && action !== 'recover') {
         loadingDocument.current = true;
         try { board.loadJSON(drawing.json, { resetHistory: true }); }
         finally { loadingDocument.current = false; }
@@ -161,14 +176,17 @@ function App() {
       setActiveDrawing(drawing);
       setDrawingName(drawing.name);
       setSaveStatus('Saved on this device');
-      setLibraryMessage(action === 'rename' ? 'Drawing renamed.' : 'Drawing opened.');
-      if (action !== 'rename') setLibraryOpen(false);
+      setLibraryMessage(action === 'rename' ? 'Drawing renamed.'
+        : action === 'remove' ? 'Moved to deleted drawings. A blank drawing is now open.'
+        : action === 'recover' ? 'Drawing restored to your list.' : 'Drawing opened.');
+      if (action === 'open' || action === 'create' || action === 'duplicate') setLibraryOpen(false);
     } catch (error) {
       setLibraryMessage(error instanceof Error ? error.message : 'Unable to update drawings.');
     } finally {
       changingDrawing.current = false;
       if (engine.current === board) {
         setDrawings(collection.list());
+        setTrash(collection.trash());
         setReady(true);
       }
     }
@@ -268,7 +286,7 @@ function App() {
           <div className="workbar">
             <h1>{activeDrawing?.name ?? 'Untitled drawing'}</h1>
             <button ref={libraryButton} disabled={!activeDrawing} aria-haspopup="dialog"
-              onClick={() => { setDrawingName(activeDrawing?.name ?? ''); setLibraryMessage(''); setLibraryOpen(true); }}>Drawings</button>
+              onClick={() => { setDrawingName(activeDrawing?.name ?? ''); setDrawings(library.current?.list() ?? []); setTrash(library.current?.trash() ?? []); setLibraryMessage(''); setLibraryOpen(true); }}>Drawings</button>
             {mobile && <button ref={settingsButton} aria-haspopup="dialog" aria-expanded={settingsOpen}
               onClick={() => setSettingsOpen(true)}>Settings</button>}
             <div className="actions">
@@ -372,6 +390,8 @@ function App() {
             <button disabled={!ready || drawing.id === activeDrawing?.id}
               aria-current={drawing.id === activeDrawing?.id ? 'true' : undefined}
               onClick={() => void changeDrawing('open', drawing.id)}>
+              {thumbnails.get(drawing.id) ? <img className="drawing-thumbnail" src={thumbnails.get(drawing.id)} alt="" width="80" height="56" />
+                : <span className="thumbnail-fallback" aria-hidden="true">—</span>}
               <span>{drawing.name}</span>{drawing.id === activeDrawing?.id && <small>Current</small>}
             </button>
           </li>)}
@@ -382,6 +402,18 @@ function App() {
             onChange={event => setDrawingName(event.currentTarget.value)} />
             <button disabled={!ready || !drawingName.trim() || drawingName.trim() === activeDrawing?.name}>Rename</button></div>
         </form>
+        <div className="actions library-actions">
+          <button disabled={!ready} onClick={() => void changeDrawing('duplicate')}>Duplicate current drawing</button>
+          <button disabled={!ready} onClick={() => void changeDrawing('remove')}>Move current to deleted</button>
+        </div>
+        <p>Deleted drawings stay on this device and can be restored below.</p>
+        {trash.length > 0 && <section aria-label="Deleted drawings">
+          <h2>Deleted drawings</h2>
+          <ul className="drawing-list">{trash.map(drawing => <li key={drawing.id}>
+            <span>{drawing.name}</span>
+            <button disabled={!ready} onClick={() => void changeDrawing('recover', drawing.id)} aria-label={`Restore ${drawing.name}`}>Restore</button>
+          </li>)}</ul>
+        </section>}
         <p role="status">{libraryMessage}</p>
       </dialog>
       <p className="save-status" role="status">{saveStatus}</p>

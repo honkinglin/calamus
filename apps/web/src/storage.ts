@@ -67,6 +67,12 @@ export const drawingStore: DrawingStore = {
     tx.objectStore(WORKS).put(drawing);
     return () => undefined;
   }),
+  replaceSelection: (drawing, next) => transaction('readwrite', tx => {
+    tx.objectStore(WORKS).put(drawing);
+    tx.objectStore(WORKS).put(next);
+    tx.objectStore(META).put(next.id, 'active');
+    return () => undefined;
+  }),
   select: id => transaction('readwrite', tx => {
     tx.objectStore(META).put(id, 'active');
     return () => undefined;
