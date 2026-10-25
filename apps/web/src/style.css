@@ -112,3 +112,10 @@ body:has(.library-panel:modal) { overflow: hidden; }
 .library-actions { margin-top: 20px; }
 .library-panel section .drawing-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .library-panel section .drawing-list button { width: auto; }
+.canvas-viewport { width: 100%; aspect-ratio: 10 / 7; overflow: auto; overscroll-behavior: contain; border-radius: 5px; touch-action: none; }
+.canvas-viewport:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+.canvas-viewport .paper { min-width: 100%; border-radius: 0; }
+.hand-view, .hand-view canvas { cursor: grab; }
+.hand-view:active, .hand-view:active canvas { cursor: grabbing; }
+.view-controls { align-items: center; margin-bottom: 12px; }
+.view-controls output { float: none; min-width: 48px; text-align: center; font-variant-numeric: tabular-nums; }

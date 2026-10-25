@@ -184,6 +184,16 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     assert.throws(() => engine.exportPNG({ scale: Infinity }), /scale/);
     exportedCanvas.toBlob = callback => callback(null);
     await assert.rejects(engine.exportPNG(), /encode/);
+    engine.clear();
+    surface.getBoundingClientRect = () => ({ left: -300, top: -140, width: 1000, height: 700 });
+    input('pointerdown', { clientX: 200, clientY: 210 });
+    input('pointerup', { clientX: 200, clientY: 210 });
+    const zoomedPoint = engine.getStrokes()[0].points[0];
+    assert.equal(zoomedPoint.x, 500, 'zoomed and scrolled canvas maps to logical x');
+    assert.equal(zoomedPoint.y, 350, 'zoomed and scrolled canvas maps to logical y');
+    const viewIndependentJSON = engine.exportJSON();
+    surface.getBoundingClientRect = () => ({ left: 0, top: 0, width: 500, height: 350 });
+    assert.equal(engine.exportJSON(), viewIndependentJSON, 'view changes cannot mutate document data');
     engine.destroy();
     assert.throws(() => engine.undo(), /destroyed/);
     assert.equal(observer.disconnected, true);

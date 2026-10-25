@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Calamus, parseDocument } from '@calamus/core';
 import type { ReplayState } from '@calamus/core';
@@ -7,6 +7,7 @@ import { createLibrary } from './library';
 import type { Drawing } from './library';
 import { createImportController } from './import-controller';
 import { createThumbnail } from './thumbnail';
+import { clampZoom, zoomScroll } from './viewport';
 import './style.css';
 
 const emptyDocument = JSON.stringify({ schemaVersion: 1, width: 1000, height: 700, strokes: [] });
@@ -15,6 +16,33 @@ const palette = ['#253631', '#477c6c', '#b85c4c', '#ba8c46', '#5f6aab'];
 
 function App() {
   const documentRevision = useRef(0);
+  const viewport = useRef<HTMLDivElement>(null);
+  const [zoom, setZoom] = useState(1);
+  const previousZoom = useRef(1);
+  const [hand, setHand] = useState(false);
+  const [viewGesture, setViewGesture] = useState(false);
+  const gestureId = useRef<number | null>(null);
+  const pan = useRef<{ id: number; x: number; y: number; left: number; top: number } | null>(null);
+  useLayoutEffect(() => {
+    const view = viewport.current;
+    if (view) {
+      view.scrollLeft = zoomScroll(view.scrollLeft, view.clientWidth, previousZoom.current, zoom);
+      view.scrollTop = zoomScroll(view.scrollTop, view.clientHeight, previousZoom.current, zoom);
+      if (zoom === 1) view.scrollTo(0, 0);
+    }
+    previousZoom.current = zoom;
+  }, [zoom]);
+  useEffect(() => {
+    const cancel = () => { pan.current = null; gestureId.current = null; setViewGesture(false); };
+    window.addEventListener('blur', cancel);
+    return () => window.removeEventListener('blur', cancel);
+  }, []);
+  function finishViewGesture(id: number) {
+    if (gestureId.current !== id) return;
+    pan.current = null;
+    gestureId.current = null;
+    setViewGesture(false);
+  }
   const library = useRef<ReturnType<typeof createLibrary> | null>(null);
   const changingDrawing = useRef(false);
   const loadingDocument = useRef(false);
@@ -172,6 +200,7 @@ function App() {
         try { board.loadJSON(drawing.json, { resetHistory: true }); }
         finally { loadingDocument.current = false; }
         setFileMessage('');
+        setZoom(1);
       }
       setActiveDrawing(drawing);
       setDrawingName(drawing.name);
@@ -211,9 +240,11 @@ function App() {
           event.preventDefault();
           step(true);
         }
-      } else if (!event.shiftKey && (key === 'b' || key === 'e')) {
+      } else if (!event.shiftKey && (key === 'b' || key === 'e' || key === 'h')) {
         event.preventDefault();
-        setTool(key === 'b' ? 'pen' : 'eraser');
+        if (gestureId.current !== null) return;
+        setHand(key === 'h');
+        if (key !== 'h') setTool(key === 'b' ? 'pen' : 'eraser');
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -296,9 +327,39 @@ function App() {
             </div>
           </div>
           <p role="status">{fileMessage}</p>
-          <div className={'paper ' + paper}>
-            <canvas ref={canvas} aria-label="Drawing canvas" onPointerDownCapture={() => { documentRevision.current++; }} />
-            {!counts.strokes && <span className="paper-hint">Draw anywhere to begin</span>}
+          <div className="actions view-controls" role="group" aria-label="Canvas view">
+            <button disabled={viewGesture || zoom <= 1} onClick={() => setZoom(value => clampZoom(value - 0.25))} aria-label="Zoom out">−</button>
+            <output aria-live="polite">{Math.round(zoom * 100)}%</output>
+            <button disabled={viewGesture || zoom >= 3} onClick={() => setZoom(value => clampZoom(value + 0.25))} aria-label="Zoom in">+</button>
+            <button disabled={viewGesture} onClick={() => { setZoom(1); viewport.current?.scrollTo(0, 0); }}>Fit view</button>
+            <button disabled={viewGesture} aria-pressed={hand} aria-keyshortcuts="H" title="Pan view (H)"
+              onClick={() => setHand(value => !value)}>Hand</button>
+          </div>
+          <div ref={viewport} className={'canvas-viewport' + (hand ? ' hand-view' : '')} tabIndex={0}
+            aria-label="Canvas viewport" onPointerDownCapture={event => {
+              if (hand) { event.stopPropagation(); event.preventDefault(); }
+              if (gestureId.current !== null || !event.isPrimary || event.button !== 0) return;
+              gestureId.current = event.pointerId;
+              setViewGesture(true);
+              if (!hand) return;
+              const view = event.currentTarget;
+              pan.current = { id: event.pointerId, x: event.clientX, y: event.clientY, left: view.scrollLeft, top: view.scrollTop };
+              view.setPointerCapture(event.pointerId);
+            }} onPointerMoveCapture={event => {
+              const start = pan.current;
+              if (!start || start.id !== event.pointerId) return;
+              event.stopPropagation();
+              event.currentTarget.scrollLeft = start.left - (event.clientX - start.x);
+              event.currentTarget.scrollTop = start.top - (event.clientY - start.y);
+            }} onPointerUpCapture={event => {
+              if (pan.current?.id === event.pointerId) event.stopPropagation();
+              finishViewGesture(event.pointerId);
+            }} onPointerCancelCapture={event => finishViewGesture(event.pointerId)}
+            onLostPointerCapture={event => finishViewGesture(event.pointerId)}>
+            <div className={'paper ' + paper} style={{ width: `${zoom * 100}%` }}>
+              <canvas ref={canvas} aria-label="Drawing canvas" onPointerDownCapture={() => { documentRevision.current++; }} />
+              {!counts.strokes && <span className="paper-hint">Draw anywhere to begin</span>}
+            </div>
           </div>
           <p className="status">{counts.strokes} {counts.strokes === 1 ? 'stroke' : 'strokes'} <span>1000 × 700 px</span></p>
         </section>
@@ -312,8 +373,8 @@ function App() {
           <section>
             <h2>Tool</h2>
             <div className="actions">
-              <button title="Pen (B)" aria-keyshortcuts="B" aria-pressed={tool === 'pen'} onClick={() => setTool('pen')}>Pen</button>
-              <button title="Eraser (E)" aria-keyshortcuts="E" aria-pressed={tool === 'eraser'} onClick={() => setTool('eraser')}>Eraser</button>
+              <button title="Pen (B)" aria-keyshortcuts="B" disabled={viewGesture} aria-pressed={!hand && tool === 'pen'} onClick={() => { setHand(false); setTool('pen'); }}>Pen</button>
+              <button title="Eraser (E)" aria-keyshortcuts="E" disabled={viewGesture} aria-pressed={!hand && tool === 'eraser'} onClick={() => { setHand(false); setTool('eraser'); }}>Eraser</button>
             </div>
             {tool === 'eraser' && <p>Touch a stroke to erase it. Undo restores the whole gesture.</p>}
             {tool === 'pen' && <>
