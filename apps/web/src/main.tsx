@@ -9,6 +9,7 @@ import { createImportController } from './import-controller';
 import { createThumbnail } from './thumbnail';
 import { clampZoom, zoomScroll } from './viewport';
 import { brushColor, defaultPreferences, parsePreferences } from './preferences';
+import { StrokeLab } from './StrokeLab';
 import './style.css';
 
 const emptyDocument = JSON.stringify({ schemaVersion: 1, width: 1000, height: 700, strokes: [] });
@@ -17,6 +18,13 @@ const palette = ['#253631', '#477c6c', '#b85c4c', '#ba8c46', '#5f6aab'];
 
 function App() {
   const documentRevision = useRef(0);
+  const [labOpen, setLabOpen] = useState(false);
+  const labButton = useRef<HTMLButtonElement>(null);
+  const wasLabOpen = useRef(false);
+  useEffect(() => {
+    if (wasLabOpen.current && !labOpen) labButton.current?.focus();
+    wasLabOpen.current = labOpen;
+  }, [labOpen]);
   const viewport = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
   const previousZoom = useRef(1);
@@ -94,7 +102,7 @@ function App() {
     if (ready && libraryOpen && dialog?.open && !dialog.contains(document.activeElement)) {
       dialog.querySelector<HTMLButtonElement>('button')?.focus();
     }
-  }, [ready, libraryOpen]);
+  }, [ready, libraryOpen, labOpen]);
   const [replayState, setReplayState] = useState<ReplayState>('idle');
   const [replaySpeed, setReplaySpeed] = useState(1);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -242,7 +250,7 @@ function App() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!ready || libraryOpen || event.isComposing || event.repeat || event.altKey) return;
+      if (!ready || libraryOpen || labOpen || event.isComposing || event.repeat || event.altKey) return;
       if (event.target instanceof HTMLElement &&
           (event.target.isContentEditable || event.target.closest('input, textarea, select'))) return;
       const key = event.key.toLowerCase();
@@ -263,7 +271,7 @@ function App() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [ready, libraryOpen]);
+  }, [ready, libraryOpen, labOpen]);
 
   function exportFile(format: 'SVG' | 'JSON') {
     const board = engine.current;
@@ -340,6 +348,7 @@ function App() {
               <button disabled={!counts.strokes} onClick={() => engine.current?.clear()}>Clear</button>
             </div>
           </div>
+          <button ref={labButton} className="lab-launch" aria-haspopup="dialog" onClick={() => setLabOpen(true)}>Stroke lab</button>
           <p role="status">{fileMessage}</p>
           <div className="actions view-controls" role="group" aria-label="Canvas view">
             <button disabled={viewGesture || zoom <= 1} onClick={() => setZoom(value => clampZoom(value - 0.25))} aria-label="Zoom out">−</button>
@@ -519,6 +528,7 @@ function App() {
         </section>}
         <p role="status">{libraryMessage}</p>
       </dialog>
+      {labOpen && <StrokeLab onClose={() => setLabOpen(false)} />}
       <p className="save-status" role="status">{saveStatus}</p>
     </>
   );
