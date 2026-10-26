@@ -41,7 +41,7 @@ main {
 h1 { margin: 0; font: 500 clamp(22px, 3vw, 33px) Georgia, serif; }
 h2 { margin: 0 0 16px; font-size: 14px; }
 button {
-  border: 1px solid #d6dbd1;
+  border: 1px solid var(--color-border);
   background: var(--color-surface);
   border-radius: 8px;
   padding: 8px 12px;
@@ -104,7 +104,7 @@ select:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3
 .drawing-list button[aria-current] { opacity: 1; border-color: var(--color-accent); background: #477c6c14; }
 .drawing-list small { color: var(--color-muted); }
 .rename-row { display: flex; gap: 8px; margin-top: 8px; }
-.rename-row input { min-width: 0; width: 100%; padding: 8px; font: inherit; color: inherit; background: var(--color-paper); border: 1px solid var(--color-border); border-radius: 8px; }
+.rename-row input { min-width: 0; width: 100%; padding: 8px; font: inherit; color: inherit; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; }
 body:has(.library-panel:modal) { overflow: hidden; }
 .drawing-thumbnail, .thumbnail-fallback { flex: 0 0 80px; width: 80px; height: 56px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-paper); object-fit: contain; }
 .drawing-list button > span:not(.thumbnail-fallback) { flex: 1; }
@@ -119,3 +119,19 @@ body:has(.library-panel:modal) { overflow: hidden; }
 .hand-view:active, .hand-view:active canvas { cursor: grabbing; }
 .view-controls { align-items: center; margin-bottom: 12px; }
 .view-controls output { float: none; min-width: 48px; text-align: center; font-variant-numeric: tabular-nums; }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-text: #e6eee8;
+  --color-workspace: #17231e;
+  --color-border: #46594d;
+  --color-surface: #24352c;
+  --color-accent: #91c9ae;
+  --color-primary: #35634f;
+  --color-muted: #b4c5b9;
+}
+.setting-note { color: var(--color-muted); font-size: 12px; line-height: 1.6; }
+input[type="color"] { display: block; width: 100%; height: 38px; margin-top: 8px; padding: 3px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); }
+@media (max-width: 720px) {
+  .settings-panel, .library-panel { padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+}

@@ -8,6 +8,7 @@ import type { Drawing } from './library';
 import { createImportController } from './import-controller';
 import { createThumbnail } from './thumbnail';
 import { clampZoom, zoomScroll } from './viewport';
+import { brushColor, defaultPreferences, parsePreferences } from './preferences';
 import './style.css';
 
 const emptyDocument = JSON.stringify({ schemaVersion: 1, width: 1000, height: 700, strokes: [] });
@@ -100,12 +101,25 @@ function App() {
   const [fileMessage, setFileMessage] = useState('');
   const canvas = useRef<HTMLCanvasElement>(null);
   const engine = useRef<Calamus | null>(null);
+  const [preferences, setPreferences] = useState(() => {
+    try { return parsePreferences(localStorage.getItem('calamus-preferences')); }
+    catch { return { ...defaultPreferences }; }
+  });
+  const [preferenceMessage, setPreferenceMessage] = useState('');
+  useEffect(() => {
+    document.documentElement.dataset.theme = preferences.theme;
+    try {
+      localStorage.setItem('calamus-preferences', JSON.stringify(preferences));
+      setPreferenceMessage('');
+    } catch { setPreferenceMessage('Appearance changes apply for this session only.'); }
+  }, [preferences]);
+  const [brushMode, setBrushMode] = useState<'pen' | 'highlighter'>('pen');
   const [color, setColor] = useState(palette[0]);
   const [size, setSize] = useState(6);
   const [smoothing, setSmoothing] = useState(0.55);
   const [stabilizer, setStabilizer] = useState(0);
   const [velocityWidth, setVelocityWidth] = useState(true);
-  const [paper, setPaper] = useState<'plain' | 'dots'>('dots');
+  const paper = preferences.guides;
   const [counts, setCounts] = useState({ strokes: 0, undo: 0, redo: 0 });
 
   useEffect(() => {
@@ -166,8 +180,8 @@ function App() {
   }, []);
 
   useEffect(() => {
-    engine.current?.setBrush({ color, size, smoothing, stabilizer, velocityWidth });
-  }, [color, size, smoothing, stabilizer, velocityWidth]);
+    engine.current?.setBrush({ color: brushColor(color, brushMode), size, smoothing, stabilizer, velocityWidth });
+  }, [color, brushMode, size, smoothing, stabilizer, velocityWidth]);
 
   useEffect(() => { engine.current?.setTool(tool); }, [tool]);
 
@@ -282,7 +296,7 @@ function App() {
         scale: exportScale,
         crop: cropExport,
         padding: exportPadding,
-        background: transparentPNG ? undefined : '#fffdf7',
+        background: transparentPNG ? undefined : preferences.paperColor,
       });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -356,7 +370,7 @@ function App() {
               finishViewGesture(event.pointerId);
             }} onPointerCancelCapture={event => finishViewGesture(event.pointerId)}
             onLostPointerCapture={event => finishViewGesture(event.pointerId)}>
-            <div className={'paper ' + paper} style={{ width: `${zoom * 100}%` }}>
+            <div className={'paper ' + paper} style={{ width: `${zoom * 100}%`, backgroundColor: preferences.paperColor }}>
               <canvas ref={canvas} aria-label="Drawing canvas" onPointerDownCapture={() => { documentRevision.current++; }} />
               {!counts.strokes && <span className="paper-hint">Draw anywhere to begin</span>}
             </div>
@@ -379,6 +393,16 @@ function App() {
             {tool === 'eraser' && <p>Touch a stroke to erase it. Undo restores the whole gesture.</p>}
             {tool === 'pen' && <>
             <h2>Brush</h2>
+            <div className="actions" role="group" aria-label="Brush preset">
+              <button aria-pressed={brushMode === 'pen'} onClick={() => {
+                setBrushMode('pen'); setColor(palette[0]); setSize(6); setVelocityWidth(true);
+              }}>Ink</button>
+              <button aria-pressed={brushMode === 'highlighter'} onClick={() => {
+                setBrushMode('highlighter'); setColor('#eab308'); setSize(24); setVelocityWidth(false);
+              }}>Highlighter</button>
+            </div>
+            <p className="setting-note">{brushMode === 'highlighter' ? '40% opacity. Separate strokes build up color.' : 'Opaque ink. Adjust width response below.'}</p>
+            <label>Custom color <input type="color" value={color} onChange={event => setColor(event.currentTarget.value)} /></label>
             <div className="swatches" role="group" aria-label="Brush color">
               {palette.map(value => <button key={value} className="swatch" style={{ background: value }}
                 aria-label={'Color ' + value} aria-pressed={color === value} onClick={() => setColor(value)} />)}
@@ -431,10 +455,28 @@ function App() {
           </section>
           <section>
             <h2>Paper</h2>
+            <label>Paper color
+              <select value={preferences.paperColor} onChange={event => {
+                const paperColor = event.currentTarget.value as typeof preferences.paperColor;
+                setPreferences(value => ({ ...value, paperColor }));
+              }}>
+                <option value="#fffdf7">Warm</option><option value="#ffffff">White</option><option value="#e9f0e8">Sage</option>
+              </select>
+            </label>
+            <p className="setting-note">Paper color applies to PNG unless transparent. Guides are display only. SVG and JSON contain strokes only.</p>
             <div className="actions" role="group" aria-label="Paper guides">
-              <button aria-pressed={paper === 'plain'} onClick={() => setPaper('plain')}>Plain</button>
-              <button aria-pressed={paper === 'dots'} onClick={() => setPaper('dots')}>Dot grid</button>
+              <button aria-pressed={paper === 'plain'} onClick={() => setPreferences(value => ({ ...value, guides: 'plain' }))}>Plain</button>
+              <button aria-pressed={paper === 'dots'} onClick={() => setPreferences(value => ({ ...value, guides: 'dots' }))}>Dot grid</button>
             </div>
+          </section>
+          <section>
+            <h2>Appearance</h2>
+            <div className="actions" role="group" aria-label="Interface theme">
+              <button aria-pressed={preferences.theme === 'light'} onClick={() => setPreferences(value => ({ ...value, theme: 'light' }))}>Light</button>
+              <button aria-pressed={preferences.theme === 'dark'} onClick={() => setPreferences(value => ({ ...value, theme: 'dark' }))}>Dark</button>
+            </div>
+            <p className="setting-note">Appearance is saved on this device and shared across drawings. Thumbnails use warm paper.</p>
+            <p role="status">{preferenceMessage}</p>
           </section>
         </dialog>
       </main>
