@@ -9,7 +9,8 @@
     "build": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web build",
     "check": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web check",
     "test": "pnpm --filter @calamus/core build && node --test packages/core/test/*.test.mjs && node --experimental-strip-types --test apps/web/test/*.test.mjs",
-    "bench": "pnpm --filter @calamus/core build && node packages/core/bench/stroke.mjs"
+    "bench": "pnpm --filter @calamus/core build && node --expose-gc packages/core/bench/stroke.mjs",
+    "size": "pnpm --filter @calamus/core build && node scripts/package-size.mjs"
   },
   "devDependencies": {
     "typescript": "5.9.3"
