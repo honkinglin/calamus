@@ -149,3 +149,9 @@ body:has(.stroke-lab:modal) { overflow: hidden; }
   .lab-controls, .lab-comparison { grid-template-columns: minmax(0, 1fr); }
   .stroke-lab { padding: 16px; }
 }
+.browser-benchmark { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--color-border); }
+.benchmark-canvas { width: min(100%, 420px); background: #fffdf7; cursor: default; pointer-events: none; }
+.benchmark-table { overflow-x: auto; margin-top: 16px; }
+.benchmark-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.benchmark-table th, .benchmark-table td { text-align: left; padding: 10px; border-bottom: 1px solid var(--color-border); }
+.benchmark-table caption { text-align: left; margin-bottom: 8px; color: var(--color-muted); }

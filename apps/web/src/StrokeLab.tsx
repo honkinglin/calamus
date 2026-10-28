@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createStrokeGeometry, processStroke } from '@calamus/core';
 import type { Point, Stroke } from '@calamus/core';
+import { BrowserBenchmark } from './BrowserBenchmark';
 import { makeLabSample } from './lab-samples';
 import type { SampleKind } from './lab-samples';
 
@@ -64,5 +65,6 @@ export function StrokeLab({ onClose }: { onClose: () => void }) {
       <LabPreview title="Radius following" points={points} smoothing={0} radius={radius} showRaw={showRaw} showGuide={showGuide} />
     </div>
     <p className="setting-note">Dashed red: raw input. White marker: processed tip. Purple circle: configured maximum radius; the engine ramps up its effective radius at the start. Pressure ramp uses synthetic pressure, not a device measurement. Offset is geometric distance, not latency.</p>
+    <BrowserBenchmark />
   </dialog>;
 }
