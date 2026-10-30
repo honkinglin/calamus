@@ -122,6 +122,14 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
       pointerId: 2, button: 0, isPrimary: true, clientX: 75, clientY: y, pointerType: 'mouse',
     }));
     const historyBeforeErase = engine.state.undo;
+    const fillsBeforeMiss = cache.fills;
+    dispatch('pointerdown', 0);
+    scheduled(0);
+    dispatch('pointermove', -20);
+    scheduled(0);
+    dispatch('pointerup', -20);
+    assert.equal(cache.fills, fillsBeforeMiss, 'eraser misses must not rebuild committed content');
+    assert.equal(engine.state.undo, historyBeforeErase, 'misses must not create history');
     dispatch('pointerdown', 0);
     dispatch('pointermove', 100);
     dispatch('pointercancel', 100);

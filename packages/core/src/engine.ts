@@ -1,6 +1,6 @@
 import { exportBounds } from './bounds.js';
 import type { CropOptions } from './bounds.js';
-import { hitsStrokeSweep } from './hit-test.js';
+import { StrokeHitCache } from './hit-test.js';
 import { replayDuration, replayFrame } from './replay.js';
 import { createSVG } from './export.js';
 import { parseDocument, validateDocument } from './document.js';
@@ -33,6 +33,7 @@ export interface HistoryState {
 export class Calamus {
   private tool: 'pen' | 'eraser' = 'pen';
   private erased = new Set<Stroke>();
+  private hitCache = new StrokeHitCache();
   private strokes: Stroke[] = [];
   private playback: { elapsed: number; previous: number | null; paused: boolean; speed: number } | null = null;
   private playbackFrame = 0;
@@ -84,10 +85,11 @@ export class Calamus {
   }
 
   private eraseAt(point: Point, previous: Point = point): void {
+    const count = this.erased.size;
     for (const stroke of this.strokes) {
-      if (!this.erased.has(stroke) && hitsStrokeSweep(stroke, previous, point, 10)) this.erased.add(stroke);
+      if (!this.erased.has(stroke) && this.hitCache.hits(stroke, previous, point, 10)) this.erased.add(stroke);
     }
-    this.committedDirty = true;
+    if (this.erased.size !== count) this.committedDirty = true;
   }
 
   setBrush(settings: Partial<Brush>): void {
@@ -315,6 +317,7 @@ export class Calamus {
     this.active = null;
     if (this.tool === 'eraser') {
       this.eraseAt(end, last);
+      this.hitCache.clear();
       const remaining = this.strokes.filter(item => !this.erased.has(item));
       this.erased.clear();
       if (remaining.length !== this.strokes.length) this.commit(remaining);
@@ -327,6 +330,7 @@ export class Calamus {
 
   private cancel = (event?: Event): void => {
     if (event instanceof PointerEvent && event.pointerId !== this.active?.id) return;
+    this.hitCache.clear();
     if (this.erased.size) {
       this.erased.clear();
       this.committedDirty = true;

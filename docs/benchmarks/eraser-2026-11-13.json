@@ -1,0 +1,32 @@
+{
+  "node": "v24.14.0",
+  "cpu": "Apple M3 Pro",
+  "strokes": 100,
+  "pointsPerStroke": 40,
+  "queries": 30,
+  "warmup": 3,
+  "iterations": 15,
+  "hitsPerRun": 20,
+  "rows": [
+    {
+      "name": "uncached",
+      "medianMs": 154.95662499999992,
+      "p95Ms": 159.09991700000012
+    },
+    {
+      "name": "gestureCold",
+      "medianMs": 0.6130420000004051,
+      "p95Ms": 0.7664589999999407
+    },
+    {
+      "name": "gestureWarm",
+      "medianMs": 0.0933340000001408,
+      "p95Ms": 0.10908399999971152
+    }
+  ],
+  "cache": {
+    "entries": 10,
+    "vertices": 7960
+  },
+  "notes": "Node sweep-query microbenchmark; not pointer latency. Cold creates a new gesture cache each run; warm reuses one cache. Mostly distant misses with some intersecting strokes. No rendering included."
+}
