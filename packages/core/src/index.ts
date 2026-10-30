@@ -26,14 +26,26 @@ export interface Stroke {
 
 export const PAPER = { width: 1000, height: 700 };
 
+/** Opaque source-over strokes may be filled in bounded batches without alpha accumulation. */
 export function drawStroke(ctx: CanvasRenderingContext2D, stroke: Stroke): void {
   const polygons = createStrokeGeometry(stroke);
+  const opaqueHex = /^#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{3}f|[\da-f]{6}ff)$/i.test(stroke.brush.color);
+  const batchSize = opaqueHex && ctx.globalAlpha === 1 && ctx.globalCompositeOperation === 'source-over'
+    && ctx.filter === 'none' && ctx.shadowColor === 'rgba(0, 0, 0, 0)' ? 64 : Infinity;
   ctx.fillStyle = stroke.brush.color;
   ctx.beginPath();
-  for (const polygon of polygons) {
+  let pending = 0;
+  for (let index = 0; index < polygons.length; index++) {
+    const polygon = polygons[index];
     ctx.moveTo(polygon[0].x, polygon[0].y);
-    for (const vertex of polygon.slice(1)) ctx.lineTo(vertex.x, vertex.y);
+    for (let vertex = 1; vertex < polygon.length; vertex++) ctx.lineTo(polygon[vertex].x, polygon[vertex].y);
     ctx.closePath();
+    pending++;
+    if (pending === batchSize && index + 1 < polygons.length) {
+      ctx.fill('nonzero');
+      ctx.beginPath();
+      pending = 0;
+    }
   }
   ctx.fill('nonzero');
 }
