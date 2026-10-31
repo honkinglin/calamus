@@ -1,3 +1,4 @@
+import type { RenderPoint } from './stroke.js';
 import { processStroke } from './stroke.js';
 import type { Stroke } from './index.js';
 
@@ -22,7 +23,10 @@ function unitCircle(steps: number): readonly Vertex[] {
 
 /** Clockwise polygons share a single fill to avoid alpha seams at overlaps. */
 export function createStrokeGeometry(stroke: Stroke): Vertex[][] {
-  const points = processStroke(stroke);
+  return createGeometryFromPoints(processStroke(stroke));
+}
+
+export function createGeometryFromPoints(points: readonly RenderPoint[]): Vertex[][] {
   const polygons: Vertex[][] = [];
   for (let index = 0; index < points.length; index++) {
     const point = points[index];

@@ -11,7 +11,8 @@
     "test": "pnpm --filter @calamus/core build && node --test packages/core/test/*.test.mjs && node --experimental-strip-types --test apps/web/test/*.test.mjs",
     "bench": "pnpm --filter @calamus/core build && node --expose-gc packages/core/bench/stroke.mjs",
     "size": "pnpm --filter @calamus/core build && node scripts/package-size.mjs",
-    "bench:eraser": "pnpm --filter @calamus/core build && node packages/core/bench/eraser.mjs"
+    "bench:eraser": "pnpm --filter @calamus/core build && node packages/core/bench/eraser.mjs",
+    "bench:incremental": "pnpm --filter @calamus/core build && node packages/core/bench/incremental.mjs"
   },
   "devDependencies": {
     "typescript": "5.9.3"

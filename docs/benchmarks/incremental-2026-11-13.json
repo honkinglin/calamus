@@ -1,0 +1,46 @@
+{
+  "node": "v24.14.0",
+  "cpu": "Apple M3 Pro",
+  "points": 10000,
+  "samplesPerFrame": 16,
+  "simulatedFrames": 625,
+  "warmup": 3,
+  "iterations": 10,
+  "rows": [
+    {
+      "name": "batchPrefixes",
+      "medianMs": 266.0709585000002,
+      "p95Ms": 280.011833,
+      "samplesMs": [
+        280.011833,
+        266.3710840000001,
+        264.796916,
+        265.28895799999987,
+        269.10420799999974,
+        263.99720899999966,
+        265.77700000000004,
+        267.3757089999999,
+        266.36491700000033,
+        265.5318750000001
+      ]
+    },
+    {
+      "name": "incremental",
+      "medianMs": 0.836312499999849,
+      "p95Ms": 1.375583000000006,
+      "samplesMs": [
+        1.375583000000006,
+        0.8344160000001466,
+        0.8089580000000751,
+        0.8748749999999745,
+        0.8011249999999563,
+        0.8382089999995515,
+        0.8072919999999613,
+        0.8483750000000327,
+        0.840874999999869,
+        0.8017089999998461
+      ]
+    }
+  ],
+  "notes": "Node sampling-only microbenchmark; excludes geometry, Canvas, events and display. Incremental mode retains one processed point per raw sample for the active gesture. Timing is total processing across all simulated frames, not per-frame latency."
+}
