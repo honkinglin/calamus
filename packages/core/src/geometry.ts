@@ -27,11 +27,16 @@ export function createStrokeGeometry(stroke: Stroke): Vertex[][] {
 }
 
 export function createGeometryFromPoints(points: readonly RenderPoint[]): Vertex[][] {
-  const polygons: Vertex[][] = [];
-  for (let index = 0; index < points.length; index++) {
-    polygons.push(...createPointGeometry(points[index], points[index - 1]));
+  return Array.from(iterateGeometry(points));
+}
+
+/** Generates only the current sample's polygons; consumers need not retain the full geometry. */
+export function* iterateGeometry(points: Iterable<RenderPoint>): Generator<Vertex[]> {
+  let previous: RenderPoint | undefined;
+  for (const point of points) {
+    yield* createPointGeometry(point, previous);
+    previous = point;
   }
-  return polygons;
 }
 
 function createPointGeometry(point: RenderPoint, previous?: RenderPoint): Vertex[][] {
