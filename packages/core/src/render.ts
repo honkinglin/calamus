@@ -5,14 +5,14 @@ import type { RenderPoint } from './stroke.js';
 
 /** Opaque source-over strokes may be filled in bounded batches without alpha accumulation. */
 export function drawStroke(ctx: CanvasRenderingContext2D, stroke: Stroke): void {
-  fillGeometry(ctx, stroke.brush.color, createStrokeGeometry(stroke));
+  drawGeometry(ctx, stroke.brush.color, createStrokeGeometry(stroke));
 }
 
 export function drawProcessedStroke(ctx: CanvasRenderingContext2D, color: string, points: readonly RenderPoint[]): void {
-  fillGeometry(ctx, color, createGeometryFromPoints(points));
+  drawGeometry(ctx, color, createGeometryFromPoints(points));
 }
 
-function fillGeometry(ctx: CanvasRenderingContext2D, color: string, polygons: Vertex[][]): void {
+export function drawGeometry(ctx: CanvasRenderingContext2D, color: string, polygons: readonly (readonly Vertex[])[]): void {
   const opaqueHex = /^#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{3}f|[\da-f]{6}ff)$/i.test(color);
   const batchSize = opaqueHex && ctx.globalAlpha === 1 && ctx.globalCompositeOperation === 'source-over'
     && ctx.filter === 'none' && ctx.shadowColor === 'rgba(0, 0, 0, 0)' ? 64 : Infinity;

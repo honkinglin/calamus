@@ -1,6 +1,7 @@
 import { StrokeProcessor } from './stroke.js';
 import type { RenderPoint } from './stroke.js';
-import { drawProcessedStroke } from './render.js';
+import { drawProcessedStroke, drawGeometry } from './render.js';
+import { StrokeGeometryCache } from './geometry.js';
 import { exportBounds } from './bounds.js';
 import type { CropOptions } from './bounds.js';
 import { StrokeHitCache } from './hit-test.js';
@@ -46,7 +47,7 @@ export class Calamus {
   private committedDirty = true;
   private resolutionQuery?: MediaQueryList;
   private brush: Brush;
-  private active: { id: number; start: number; stroke: Stroke; processor: StrokeProcessor; processed: RenderPoint[] } | null = null;
+  private active: { id: number; start: number; stroke: Stroke; processor: StrokeProcessor; processed: RenderPoint[]; geometry: StrokeGeometryCache } | null = null;
   private observer: ResizeObserver;
   private controller = new AbortController();
   private frame = 0;
@@ -292,10 +293,13 @@ export class Calamus {
     const point = this.sample(event);
     const brush = { ...this.brush };
     const processor = new StrokeProcessor(brush);
+    const processed = this.tool === 'pen' ? [processor.append(point)] : [];
+    const geometry = new StrokeGeometryCache();
+    for (const sample of processed) geometry.append(sample);
     this.active = {
       id: event.pointerId, start: event.timeStamp,
       stroke: { brush, points: [point] }, processor,
-      processed: this.tool === 'pen' ? [processor.append(point)] : [],
+      processed, geometry,
     };
     if (this.tool === 'eraser') this.eraseAt(this.active.stroke.points[0]);
     this.schedule();
@@ -308,7 +312,11 @@ export class Calamus {
       const point = this.sample(sample);
       const previous = this.active.stroke.points.at(-1)!;
       this.active.stroke.points.push(point);
-      if (this.tool === 'pen') this.active.processed.push(this.active.processor.append(point));
+      if (this.tool === 'pen') {
+        const processed = this.active.processor.append(point);
+        this.active.processed.push(processed);
+        this.active.geometry.append(processed);
+      }
       if (this.tool === 'eraser') this.eraseAt(point, previous);
     }
     this.schedule();
@@ -399,7 +407,11 @@ export class Calamus {
       this.committedDirty = false;
     }
     ctx.drawImage(this.committedCanvas, 0, 0, this.width, this.height);
-    if (this.active && this.tool === 'pen') drawProcessedStroke(ctx, this.active.stroke.brush.color, this.active.processed);
+    if (this.active && this.tool === 'pen') {
+      const geometry = this.active.geometry.geometry;
+      if (geometry) drawGeometry(ctx, this.active.stroke.brush.color, geometry);
+      else drawProcessedStroke(ctx, this.active.stroke.brush.color, this.active.processed);
+    }
   }
 
   destroy(): void {

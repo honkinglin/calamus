@@ -12,7 +12,8 @@
     "bench": "pnpm --filter @calamus/core build && node --expose-gc packages/core/bench/stroke.mjs",
     "size": "pnpm --filter @calamus/core build && node scripts/package-size.mjs",
     "bench:eraser": "pnpm --filter @calamus/core build && node packages/core/bench/eraser.mjs",
-    "bench:incremental": "pnpm --filter @calamus/core build && node packages/core/bench/incremental.mjs"
+    "bench:incremental": "pnpm --filter @calamus/core build && node packages/core/bench/incremental.mjs",
+    "bench:geometry": "pnpm --filter @calamus/core build && node packages/core/bench/geometry.mjs"
   },
   "devDependencies": {
     "typescript": "5.9.3"

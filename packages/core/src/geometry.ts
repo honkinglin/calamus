@@ -29,27 +29,60 @@ export function createStrokeGeometry(stroke: Stroke): Vertex[][] {
 export function createGeometryFromPoints(points: readonly RenderPoint[]): Vertex[][] {
   const polygons: Vertex[][] = [];
   for (let index = 0; index < points.length; index++) {
-    const point = points[index];
-    const radius = point.width / 2;
-    const steps = Math.max(12, Math.min(64, Math.ceil(Math.PI * Math.sqrt(radius * 8))));
-    const circle: Vertex[] = [];
-    for (const vertex of unitCircle(steps)) {
-      circle.push({ x: point.x + vertex.x * radius, y: point.y + vertex.y * radius });
-    }
-    polygons.push(circle);
-    const previous = points[index - 1];
-    if (!previous) continue;
-    const distance = Math.hypot(point.x - previous.x, point.y - previous.y);
-    if (distance === 0) continue;
-    const normalX = -(point.y - previous.y) / distance;
-    const normalY = (point.x - previous.x) / distance;
-    const previousRadius = previous.width / 2;
-    polygons.push([
-      { x: previous.x + normalX * previousRadius, y: previous.y + normalY * previousRadius },
-      { x: previous.x - normalX * previousRadius, y: previous.y - normalY * previousRadius },
-      { x: point.x - normalX * radius, y: point.y - normalY * radius },
-      { x: point.x + normalX * radius, y: point.y + normalY * radius },
-    ]);
+    polygons.push(...createPointGeometry(points[index], points[index - 1]));
   }
   return polygons;
+}
+
+function createPointGeometry(point: RenderPoint, previous?: RenderPoint): Vertex[][] {
+  const polygons: Vertex[][] = [];
+  const radius = point.width / 2;
+  const steps = Math.max(12, Math.min(64, Math.ceil(Math.PI * Math.sqrt(radius * 8))));
+  const circle: Vertex[] = [];
+  for (const vertex of unitCircle(steps)) {
+    circle.push({ x: point.x + vertex.x * radius, y: point.y + vertex.y * radius });
+  }
+  polygons.push(circle);
+  if (!previous) return polygons;
+  const distance = Math.hypot(point.x - previous.x, point.y - previous.y);
+  if (distance === 0) return polygons;
+  const normalX = -(point.y - previous.y) / distance;
+  const normalY = (point.x - previous.x) / distance;
+  const previousRadius = previous.width / 2;
+  polygons.push([
+    { x: previous.x + normalX * previousRadius, y: previous.y + normalY * previousRadius },
+    { x: previous.x - normalX * previousRadius, y: previous.y - normalY * previousRadius },
+    { x: point.x - normalX * radius, y: point.y - normalY * radius },
+    { x: point.x + normalX * radius, y: point.y + normalY * radius },
+  ]);
+  return polygons;
+}
+
+/** Gesture-local cache. On overflow, release geometry and use the batch renderer. */
+export class StrokeGeometryCache {
+  private polygons: Vertex[][] = [];
+  private previous?: RenderPoint;
+  private vertices = 0;
+  private overflow = false;
+
+  constructor(private readonly vertexLimit = 100_000) {}
+
+  append(point: RenderPoint): void {
+    if (this.overflow) return;
+    const added = createPointGeometry(point, this.previous);
+    const count = added.reduce((sum, polygon) => sum + polygon.length, 0);
+    if (this.vertices + count > this.vertexLimit) {
+      this.polygons = [];
+      this.previous = undefined;
+      this.vertices = 0;
+      this.overflow = true;
+      return;
+    }
+    this.polygons.push(...added);
+    this.vertices += count;
+    this.previous = { ...point };
+  }
+
+  get geometry(): readonly (readonly Vertex[])[] | null { return this.overflow ? null : this.polygons; }
+  get vertexCount(): number { return this.vertices; }
 }

@@ -97,11 +97,26 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     surface.dispatchEvent(new Pointer('pointerdown', { pointerId: 1, button: 0, isPrimary: true, clientX: 10, clientY: 10, pointerType: 'mouse' }));
     scheduled();
     assert.equal(cache.fills, fills);
+    const activeGeometry = engine.active.geometry;
+    const firstPolygon = activeGeometry.geometry[0];
+    surface.dispatchEvent(new Pointer('pointermove', {
+      pointerId: 1, clientX: 30, clientY: 20, pointerType: 'mouse',
+      getCoalescedEvents: () => [
+        new Pointer('pointermove', { clientX: 20, clientY: 15, pointerType: 'mouse' }),
+        new Pointer('pointermove', { clientX: 30, clientY: 20, pointerType: 'mouse' }),
+      ],
+    }));
+    scheduled();
+    assert.equal(engine.active.processed.length, 3);
+    assert.equal(activeGeometry.geometry[0], firstPolygon);
+    const geometrySize = activeGeometry.vertexCount;
     browser.devicePixelRatio = 2;
     queries[0].dispatchEvent(new Event('change'));
     assert.equal(surface.width, 1000);
     assert.equal(cache.fills, fills + 1);
+    assert.equal(activeGeometry.vertexCount, geometrySize);
     engine.clear();
+    assert.equal(engine.active, null);
     assert.equal(engine.state.strokes, 0);
     engine.undo();
     assert.equal(engine.state.strokes, 1);
