@@ -27,6 +27,7 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     toBlob(callback) { callback(new Blob(['png'], { type: 'image/png' })); }
     getContext() {
       return {
+        globalAlpha: 1, globalCompositeOperation: 'source-over', filter: 'none', shadowColor: 'rgba(0, 0, 0, 0)',
         setTransform() {}, clearRect() {}, drawImage() {}, beginPath() {}, fillRect() {},
         moveTo() {}, lineTo() {}, closePath() {},
         fill: () => { this.fills++; },
@@ -217,7 +218,26 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     const viewIndependentJSON = engine.exportJSON();
     surface.getBoundingClientRect = () => ({ left: 0, top: 0, width: 500, height: 350 });
     assert.equal(engine.exportJSON(), viewIndependentJSON, 'view changes cannot mutate document data');
-    engine.destroy();
+    const rasterSurfaces = [];
+    surface.ownerDocument.createElement = () => {
+      const canvas = new Surface(); rasterSurfaces.push(canvas); return canvas;
+    };
+    for (const outcome of ['pointercancel', 'pointerup', 'destroy']) {
+      const beforeGesture = engine.getStrokes().length;
+      input('pointerdown');
+      for (let i = 1; i <= 70; i++) input('pointermove', { clientX: i, clientY: i / 2 });
+      scheduled();
+      const rasterCanvas = rasterSurfaces.at(-1);
+      assert.ok(rasterCanvas.width > 0, 'long opaque gesture allocates raster storage');
+      const cachedFills = rasterCanvas.fills;
+      observer.callback();
+      assert.equal(rasterCanvas.fills, cachedFills, 'unchanged resize does not redraw cached prefix');
+      if (outcome === 'destroy') engine.destroy();
+      else input(outcome, { clientX: 70, clientY: 35 });
+      assert.equal(rasterCanvas.width, 0, 'ending, cancelling or destroying releases raster storage');
+      assert.equal(engine.active, null);
+      if (outcome !== 'destroy') assert.equal(engine.getStrokes().length, beforeGesture + (outcome === 'pointerup' ? 1 : 0));
+    }
     assert.throws(() => engine.undo(), /destroyed/);
     assert.equal(observer.disconnected, true);
     assert.equal(surface.style.touchAction, 'auto');

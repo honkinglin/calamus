@@ -1,3 +1,4 @@
+import { ActiveStrokeRaster } from './active-raster.js';
 import { StrokeProcessor } from './stroke.js';
 import type { RenderPoint } from './stroke.js';
 import { drawProcessedStroke, drawGeometry } from './render.js';
@@ -47,7 +48,7 @@ export class Calamus {
   private committedDirty = true;
   private resolutionQuery?: MediaQueryList;
   private brush: Brush;
-  private active: { id: number; start: number; stroke: Stroke; processor: StrokeProcessor; processed: RenderPoint[]; geometry: StrokeGeometryCache } | null = null;
+  private active: { id: number; start: number; stroke: Stroke; processor: StrokeProcessor; processed: RenderPoint[]; geometry: StrokeGeometryCache; raster: ActiveStrokeRaster } | null = null;
   private observer: ResizeObserver;
   private controller = new AbortController();
   private frame = 0;
@@ -299,7 +300,7 @@ export class Calamus {
     this.active = {
       id: event.pointerId, start: event.timeStamp,
       stroke: { brush, points: [point] }, processor,
-      processed, geometry,
+      processed, geometry, raster: new ActiveStrokeRaster(() => this.canvas.ownerDocument.createElement('canvas')),
     };
     if (this.tool === 'eraser') this.eraseAt(this.active.stroke.points[0]);
     this.schedule();
@@ -330,6 +331,7 @@ export class Calamus {
     if (end.x !== last.x || end.y !== last.y) {
       stroke.points.push({ ...end, pressure: last.pressure });
     }
+    this.active?.raster.dispose();
     this.active = null;
     if (this.tool === 'eraser') {
       this.eraseAt(end, last);
@@ -352,6 +354,7 @@ export class Calamus {
       this.committedDirty = true;
     }
     const id = this.active?.id;
+    this.active?.raster.dispose();
     this.active = null;
     if (id !== undefined && this.canvas.hasPointerCapture(id)) this.canvas.releasePointerCapture(id);
     this.schedule();
@@ -409,8 +412,15 @@ export class Calamus {
     ctx.drawImage(this.committedCanvas, 0, 0, this.width, this.height);
     if (this.active && this.tool === 'pen') {
       const geometry = this.active.geometry.geometry;
-      if (geometry) drawGeometry(ctx, this.active.stroke.brush.color, geometry);
-      else drawProcessedStroke(ctx, this.active.stroke.brush.color, this.active.processed);
+      const color = this.active.stroke.brush.color;
+      if (geometry) {
+        if (!this.active.raster.draw(ctx, color, geometry, this.canvas.width, this.canvas.height, this.width, this.height)) {
+          drawGeometry(ctx, color, geometry);
+        }
+      } else {
+        this.active.raster.dispose();
+        drawProcessedStroke(ctx, color, this.active.processed);
+      }
     }
   }
 

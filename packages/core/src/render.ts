@@ -14,9 +14,7 @@ export function drawProcessedStroke(ctx: CanvasRenderingContext2D, color: string
 }
 
 export function drawGeometry(ctx: CanvasRenderingContext2D, color: string, polygons: Iterable<readonly Vertex[]>): void {
-  const opaqueHex = /^#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{3}f|[\da-f]{6}ff)$/i.test(color);
-  const batchSize = opaqueHex && ctx.globalAlpha === 1 && ctx.globalCompositeOperation === 'source-over'
-    && ctx.filter === 'none' && ctx.shadowColor === 'rgba(0, 0, 0, 0)' ? 64 : Infinity;
+  const batchSize = canBatchOpaque(ctx, color) ? 64 : Infinity;
   ctx.fillStyle = color;
   ctx.beginPath();
   let pending = 0;
@@ -37,4 +35,10 @@ export function drawGeometry(ctx: CanvasRenderingContext2D, color: string, polyg
 function* processPoints(stroke: Stroke): Generator<RenderPoint> {
   const processor = new StrokeProcessor(stroke.brush);
   for (const point of stroke.points) yield processor.append(point);
+}
+
+export function canBatchOpaque(ctx: CanvasRenderingContext2D, color: string): boolean {
+  const opaqueHex = /^#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{3}f|[\da-f]{6}ff)$/i.test(color);
+  return opaqueHex && ctx.globalAlpha === 1 && ctx.globalCompositeOperation === 'source-over'
+    && ctx.filter === 'none' && ctx.shadowColor === 'rgba(0, 0, 0, 0)';
 }
