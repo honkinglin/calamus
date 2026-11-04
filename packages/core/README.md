@@ -1,0 +1,70 @@
+# Calamus Core
+
+A dependency-free TypeScript canvas drawing SDK with smoothing, pressure-aware strokes, undo/redo, replay, and PNG/SVG/JSON export.
+
+## Development status
+
+This package is a local development build. The `@calamus/core` name is provisional, `private: true` prevents accidental publication, and this repository does not claim an npm registry release. The current output is ESM with TypeScript declarations; CommonJS and UMD builds are not provided.
+
+## Install a local build
+
+From the repository root:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm --filter @calamus/core build
+pnpm --filter @calamus/core pack --pack-destination /tmp/calamus-pack
+```
+
+Create the destination directory first. In your own application, install the generated `.tgz` file using `pnpm add /absolute/path/to/package.tgz`. Import from the package root; internal module paths are not supported public APIs.
+
+## Browser integration
+
+Give the canvas a CSS size, then construct the engine after it is attached to the page:
+
+```html
+<canvas id="drawing" style="width: 100%; height: 420px"></canvas>
+```
+
+```ts
+import { Calamus } from '@calamus/core';
+
+const canvas = document.querySelector<HTMLCanvasElement>('#drawing')!;
+const drawing = new Calamus(canvas, {
+  width: 1000,
+  height: 700,
+  brush: { color: '#253631', size: 6, smoothing: 0.55, stabilizer: 8 },
+});
+
+drawing.setTool('eraser');
+drawing.setTool('pen');
+drawing.undo();
+drawing.redo();
+
+const json = drawing.exportJSON();
+const png = await drawing.exportPNG({ scale: 2 });
+drawing.loadJSON(json);
+
+// Call when unmounting or removing the canvas.
+drawing.destroy();
+```
+
+The engine maps pointer coordinates into the logical document size and adapts the backing canvas to device pixel ratio. Constructing an engine requires a browser with Canvas 2D, Pointer Events, ResizeObserver, and matchMedia. Importing the package and calling its pure geometry/document functions does not require a DOM.
+
+Exports contain committed strokes, not an unfinished gesture. Store the returned JSON or Blob in your application; the SDK does not upload or persist documents automatically. Use hexadecimal brush colors for JSON round trips. Transparent strokes retain a single fill; very dense transparent paths can still be expensive.
+
+## Pure functions
+
+```ts
+import { createSVG, parseDocument, processStroke } from '@calamus/core';
+
+const document = parseDocument(savedJSON);
+const svg = createSVG(document.strokes, document.width, document.height);
+const renderedPoints = document.strokes.map(processStroke);
+```
+
+Raw samples remain in the document; rendering derives smoothed coordinates and widths. `parseDocument` validates imported data and rejects unsupported document versions.
+
+## Package verification
+
+Run `pnpm check:package` in the repository. It builds and packs the SDK, installs the tarball into a temporary external consumer with pnpm offline, runs DOM-free ESM checks, and validates strict TypeScript consumers in NodeNext and Bundler modes. Temporary files are removed afterwards. This does not publish the package or replace browser rendering tests.

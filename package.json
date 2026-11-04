@@ -14,7 +14,8 @@
     "bench:eraser": "pnpm --filter @calamus/core build && node packages/core/bench/eraser.mjs",
     "bench:incremental": "pnpm --filter @calamus/core build && node packages/core/bench/incremental.mjs",
     "bench:geometry": "pnpm --filter @calamus/core build && node packages/core/bench/geometry.mjs",
-    "bench:streaming": "pnpm --filter @calamus/core build && node packages/core/bench/streaming.mjs"
+    "bench:streaming": "pnpm --filter @calamus/core build && node packages/core/bench/streaming.mjs",
+    "check:package": "pnpm --filter @calamus/core build && node scripts/package-consumer.mjs"
   },
   "devDependencies": {
     "typescript": "5.9.3"

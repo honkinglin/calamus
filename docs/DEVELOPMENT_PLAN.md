@@ -225,13 +225,15 @@ board.destroy();
 ### P6 — npm 与开源交付
 
 - [ ] 核实包名与 scope，完善 exports、types、files、版本和包级 README。
-- [ ] 运行 `pnpm --filter @calamus/core pack` 后，在仓库外临时消费者项目中安装 tarball 并运行示例。
-- [ ] 验证原生 JS 与 TypeScript 消费、无 React 依赖、无 DOM 的模块导入。
+- [x] pnpm check:package：真实 pack 后，在仓库外临时消费者中离线安装 tarball，执行纯函数示例并自动清理。
+- [x] 原生 ESM 与严格 TypeScript（NodeNext/Bundler）消费、无运行时/peer/optional 依赖、无 DOM 模块导入及内部路径封装验证。
+- [x] 包级 README 随 tarball 分发，说明本地安装、浏览器接入、限制与验证方式。
 - [ ] 提供单页原生 JS 示例：从包入口创建画板、切换稳定方式、导出并销毁实例。示例通过实际打包产物验证。
 - [ ] 编写英文 README、中文说明、快速开始、API、数据格式与架构文档。
 - [ ] 添加截图、演示录屏、贡献指南、issue/PR 模板、变更记录和许可证。
 - [ ] 确认作者署名和许可证选择，检查第三方声明及发布内容清单。
-- [ ] CI 覆盖类型检查、单元测试、构建、浏览器流程和包消费。
+- [x] CI 配置加入实际 tarball 安装与 JS/TS 消费检查；本地通过，远端运行尚未触发。
+- [ ] CI 浏览器流程验收。
 
 验收：他人依 README 可运行网站和示例；包不含缓存、私密数据或无关文件；README 功能描述与实际版本一致。
 
