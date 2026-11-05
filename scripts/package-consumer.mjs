@@ -6,6 +6,7 @@ import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 
+const prepareExample = process.argv.includes('--prepare-example');
 const root = fileURLToPath(new URL('../', import.meta.url));
 const temporary = await mkdtemp(join(tmpdir(), 'calamus-consumer-'));
 function run(command, args, cwd) {
@@ -29,10 +30,19 @@ try {
   const manifest = JSON.parse(await readFile(join(installed, 'package.json'), 'utf8'));
   for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies']) assert.equal(Object.keys(manifest[field] ?? {}).length, 0, `${field} must remain empty`);
   console.log(run(process.execPath, ['smoke.mjs'], consumer).trim());
+  await cp(join(root, 'examples/vanilla/app.js'), join(consumer, 'example.js'));
   const compiler = createRequire(import.meta.url).resolve('typescript/bin/tsc');
   for (const [module, resolution] of [['NodeNext', 'NodeNext'], ['ESNext', 'Bundler']]) {
     run(process.execPath, [compiler, '--noEmit', '--strict', '--target', 'ES2022', '--module', module,
       '--moduleResolution', resolution, '--lib', 'ES2022,DOM', 'types.ts'], consumer);
+  }
+  run(process.execPath, [compiler, '--allowJs', '--checkJs', '--noEmit', '--strict', '--target', 'ES2022', '--module', 'NodeNext', '--lib', 'ES2022,DOM', 'example.js'], consumer);
+  console.log('Vanilla JavaScript example passed strict checking against installed declarations.');
+  if (prepareExample) {
+    const vendor = join(root, 'examples/vanilla/vendor');
+    await rm(vendor, { recursive: true, force: true });
+    await cp(join(installed, 'dist'), vendor, { recursive: true });
+    console.log('Prepared vanilla example using the verified installed tarball.');
   }
   console.log('Packed declarations passed strict NodeNext and Bundler consumer checks. No runtime dependencies.');
 } finally {

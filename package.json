@@ -15,7 +15,10 @@
     "bench:incremental": "pnpm --filter @calamus/core build && node packages/core/bench/incremental.mjs",
     "bench:geometry": "pnpm --filter @calamus/core build && node packages/core/bench/geometry.mjs",
     "bench:streaming": "pnpm --filter @calamus/core build && node packages/core/bench/streaming.mjs",
-    "check:package": "pnpm --filter @calamus/core build && node scripts/package-consumer.mjs"
+    "check:package": "pnpm --filter @calamus/core build && node scripts/package-consumer.mjs",
+    "example:prepare": "pnpm --filter @calamus/core build && node scripts/package-consumer.mjs --prepare-example",
+    "example:vanilla": "pnpm example:prepare && pnpm --dir apps/web exec vite ../../examples/vanilla --host 127.0.0.1",
+    "example:build": "pnpm example:prepare && pnpm --dir apps/web exec vite build ../../examples/vanilla"
   },
   "devDependencies": {
     "typescript": "5.9.3"

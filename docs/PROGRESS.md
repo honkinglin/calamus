@@ -435,3 +435,15 @@ P5 浏览器验收仍受工具额度限制；透明栅格改动依赖像素对�
 - [x] 新增英文包级 README：本地 tarball 安装、生命周期、导出和现有限制。
 
 本轮没有更改 SDK 运行代码，保留 private: true、开发期包名和 ESM 构建，未发布或推送。检查方式：pnpm check:package。包名/scope、发布身份、许可证、UMD 交付及浏览器示例验收仍待完成。
+
+## 2026-11-13 · P6 原生 JavaScript 接入示例
+
+- [x] 新增 examples/vanilla：无 React 的单页画板、画笔/橡皮、颜色/宽度、三种稳定配置、历史和 PNG/SVG/JSON 下载。
+- [x] 提供实例销毁与重建操作，保留已完成笔画、重置历史；处理 pagehide/pageshow 生命周期和异步导出错误。
+- [x] pnpm example:prepare 使用实际安装的 tarball 准备 vendor；生成目录忽略追踪，未引用核心源码。
+- [x] pnpm check:package 同时对示例执行严格 checkJs，验证 SDK 公共类型；pnpm example:build 构建成功。
+- [x] CI 改为 example:build，包含原有包消费检查以及示例构建；远端 CI 未运行。
+- [x] 示例 README 说明运行、数据生命周期、手工检查及验证范围，开发计划已勾选实现项。
+- [ ] 示例浏览器交互、下载和布局验收待补。此前浏览器自动审批因使用额度限制拒绝操作，本轮未绕过限制。
+
+运行方式：pnpm example:vanilla。默认保存在内存，刷新不会恢复；请下载 JSON 备份。P5 透明渲染及浏览器回归仍未完成；本轮没有修改 SDK 运行代码。
