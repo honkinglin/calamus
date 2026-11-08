@@ -4,7 +4,7 @@ A dependency-free TypeScript canvas drawing SDK with smoothing, pressure-aware s
 
 ## Development status
 
-This package is a local development build. The `@calamus/core` name is provisional, `private: true` prevents accidental publication, and this repository does not claim an npm registry release. The current output is ESM with TypeScript declarations; CommonJS and UMD builds are not provided.
+This package is a local development build. The `@calamus/core` name is provisional, `private: true` prevents accidental publication, and this repository does not claim an npm registry release. The root entry is ESM with TypeScript declarations. A standalone UMD bundle is available at `@calamus/core/umd`; CommonJS consumers can require that explicit subpath.
 
 ## Install a local build
 
@@ -68,3 +68,18 @@ Raw samples remain in the document; rendering derives smoothed coordinates and w
 ## Package verification
 
 Run `pnpm check:package` in the repository. It builds and packs the SDK, installs the tarball into a temporary external consumer with pnpm offline, runs DOM-free ESM checks, and validates strict TypeScript consumers in NodeNext and Bundler modes. Temporary files are removed afterwards. This does not publish the package or replace browser rendering tests.
+
+## Classic script / UMD
+
+Copy `dist/calamus.umd.cjs` from the installed package to your static assets. Serve it with a JavaScript MIME type (or rename the copied asset to `calamus.umd.js` when your static host does not recognize `.cjs`). Then use the exported namespace:
+
+```html
+<canvas id="drawing" style="width: 100%; height: 420px"></canvas>
+<script src="./calamus.umd.js"></script>
+<script>
+  const drawing = new CalamusSDK.Calamus(document.querySelector('#drawing'));
+  // Call drawing.destroy() when removing the canvas.
+</script>
+```
+
+The bundle does not require a module loader or external runtime dependencies. It also supports AMD and `require('@calamus/core/umd')`. Use the root ESM entry for TypeScript declarations; the UMD subpath does not offer a separate typed CommonJS entry. Loader/pure-function checks run in Node; actual browser rendering acceptance remains pending.

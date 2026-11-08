@@ -22,9 +22,9 @@ try {
   assert.equal(archives.length, 1);
   const archive = join(temporary, archives[0]);
   const packedFiles = run('tar', ['-tzf', archive], temporary).trim().split('\n');
-  const allowed = /^package\/(?:package\.json|README\.md|LICENSE(?:\.md|\.txt)?|dist\/[a-zA-Z0-9_-]+(?:\.js|\.d\.ts))$/;
+  const allowed = /^package\/(?:package\.json|README\.md|LICENSE(?:\.md|\.txt)?|dist\/(?:calamus\.umd\.cjs|[a-zA-Z0-9_-]+(?:\.js|\.d\.ts)))$/;
   for (const file of packedFiles) assert.match(file, allowed, `Unexpected packed file: ${file}`);
-  for (const required of ['package/package.json', 'package/README.md', 'package/dist/index.js', 'package/dist/index.d.ts']) {
+  for (const required of ['package/package.json', 'package/README.md', 'package/dist/index.js', 'package/dist/index.d.ts', 'package/dist/calamus.umd.cjs']) {
     assert.ok(packedFiles.includes(required), `Missing packed file: ${required}`);
   }
   console.log(`Verified ${packedFiles.length} archive entries against the package allowlist.`);
@@ -37,6 +37,7 @@ try {
   const manifest = JSON.parse(await readFile(join(installed, 'package.json'), 'utf8'));
   for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies']) assert.equal(Object.keys(manifest[field] ?? {}).length, 0, `${field} must remain empty`);
   console.log(run(process.execPath, ['smoke.mjs'], consumer).trim());
+  console.log(run(process.execPath, ['umd.cjs'], consumer).trim());
   await cp(join(root, 'examples/vanilla/app.js'), join(consumer, 'example.js'));
   const compiler = createRequire(import.meta.url).resolve('typescript/bin/tsc');
   for (const [module, resolution] of [['NodeNext', 'NodeNext'], ['ESNext', 'Bundler']]) {

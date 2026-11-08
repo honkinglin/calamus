@@ -10,7 +10,7 @@
 | scripts | 体积报告、真实包消费与示例准备 |
 | docs | 开发计划、验收记录、API、数据格式及性能原始报告 |
 
-当前构建使用 tsc 生成 SDK ESM/声明文件，Vite 构建 Web；工作区由 pnpm 管理。SDK 不依赖 React，也没有运行时第三方依赖。
+当前构建使用 tsc 生成 SDK ESM/声明文件，Vite library mode 生成独立 UMD，Vite 构建 Web；工作区由 pnpm 管理。SDK 不依赖 React，也没有运行时第三方依赖。
 
 ## 输入与文档
 

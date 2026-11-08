@@ -1,0 +1,43 @@
+{
+  "package": "@calamus/core@0.1.0",
+  "javascript": {
+    "files": 12,
+    "rawBytes": 54242,
+    "gzipBytes": 17321
+  },
+  "declarations": {
+    "files": 11,
+    "rawBytes": 8179
+  },
+  "archiveBytes": 18661,
+  "runtimeDependencies": {},
+  "peerDependencies": {},
+  "packedFiles": [
+    "package/README.md",
+    "package/dist/active-raster.d.ts",
+    "package/dist/active-raster.js",
+    "package/dist/bounds.d.ts",
+    "package/dist/bounds.js",
+    "package/dist/calamus.umd.cjs",
+    "package/dist/document.d.ts",
+    "package/dist/document.js",
+    "package/dist/engine.d.ts",
+    "package/dist/engine.js",
+    "package/dist/export.d.ts",
+    "package/dist/export.js",
+    "package/dist/geometry.d.ts",
+    "package/dist/geometry.js",
+    "package/dist/hit-test.d.ts",
+    "package/dist/hit-test.js",
+    "package/dist/index.d.ts",
+    "package/dist/index.js",
+    "package/dist/render.d.ts",
+    "package/dist/render.js",
+    "package/dist/replay.d.ts",
+    "package/dist/replay.js",
+    "package/dist/stroke.d.ts",
+    "package/dist/stroke.js",
+    "package/package.json"
+  ],
+  "notes": "gzipBytes sums independently compressed ESM files at level 9; includes alternative ESM and UMD outputs, not a single tree-shaken browser bundle. Archive includes package metadata and declarations."
+}

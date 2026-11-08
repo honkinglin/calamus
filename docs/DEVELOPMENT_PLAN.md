@@ -224,7 +224,9 @@ board.destroy();
 
 ### P6 — npm 与开源交付
 
-- [ ] 核实包名与 scope，完善 exports、types、files、版本和包级 README。
+- [ ] 核实最终包名、scope 和发布版本。
+- [x] ESM/声明与独立 UMD 打包、exports/types/files 配置及包说明；实际 tarball 的三种 UMD 加载分支与 ESM 结果对照通过。
+- [ ] UMD 经典 script 浏览器接入与绘制验收。
 - [x] pnpm check:package：真实 pack 后，在仓库外临时消费者中离线安装 tarball，执行纯函数示例并自动清理。
 - [x] 原生 ESM 与严格 TypeScript（NodeNext/Bundler）消费、无运行时/peer/optional 依赖、无 DOM 模块导入及内部路径封装验证。
 - [x] 包级 README 随 tarball 分发，说明本地安装、浏览器接入、限制与验证方式。

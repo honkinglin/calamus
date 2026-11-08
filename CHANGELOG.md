@@ -10,7 +10,7 @@ No published releases yet. Package version 0.1.0 is a development version.
 - Whole-stroke erasing, undo/redo, replay, and PNG/SVG/JSON export.
 - Versioned JSON validation and content-cropped image export.
 - Incremental sample processing, bounded geometry caches, streaming fallback and opaque raster-prefix rendering.
-- ESM declarations and isolated tarball consumer checks; no runtime dependencies.
+- ESM declarations, standalone UMD (`CalamusSDK`) and isolated tarball consumer checks; no runtime dependencies.
 
 ### Playground and examples
 
@@ -28,5 +28,5 @@ No published releases yet. Package version 0.1.0 is a development version.
 
 - Browser regression for recent rendering changes, real touch/stylus and cross-browser acceptance remain incomplete.
 - Transparent dense paths may still be expensive.
-- UMD output and Worker flood fill are not implemented.
+- Worker flood fill is not implemented; UMD browser rendering acceptance remains pending.
 - Package identity, license, publishing and public deployment remain pending.

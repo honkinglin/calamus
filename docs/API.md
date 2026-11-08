@@ -1,6 +1,6 @@
 # SDK API
 
-本文对应当前 ESM 包入口 `@calamus/core`。内部模块未通过 exports 暴露，不能作为稳定接口使用。包尚未发布，安装方式见[包说明](../packages/core/README.md)。
+本文对应当前 ESM 包入口 `@calamus/core`。独立 UMD 可通过 `@calamus/core/umd` 获取（全局命名空间 `CalamusSDK`），类型消费仍使用根 ESM 入口。内部模块未通过 exports 暴露，不能作为稳定接口使用。包尚未发布，安装方式见[包说明](../packages/core/README.md)。
 
 ## 创建与配置
 

@@ -34,7 +34,11 @@ importers:
         specifier: 7.3.8
         version: 7.3.8
 
-  packages/core: {}
+  packages/core:
+    devDependencies:
+      vite:
+        specifier: 7.3.8
+        version: 7.3.8
 
 packages:
 

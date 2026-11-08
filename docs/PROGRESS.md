@@ -467,3 +467,14 @@ P5 浏览器验收仍受工具额度限制；透明栅格改动依赖像素对�
 - [x] 负向检查：临时加入合成的额外产物文件，确认归档检查拒绝；测试文件已清理。本地文档链接和 diff 空白检查通过。
 
 本轮未修改 SDK/网站运行代码，没有发布或推送。许可证/作者、截图录屏、浏览器验收及发布身份仍未完成。检查方式：pnpm check:package；贡献入口见 CONTRIBUTING.md，发布待办见 docs/RELEASE_CHECKLIST.md。
+
+## 2026-11-13 · P6 独立 UMD 交付
+
+- [x] 核心包增加 Vite 开发依赖及 library mode 配置，保留 tsc 的 ESM/声明输出，新增 dist/calamus.umd.cjs，全局命名空间 CalamusSDK。
+- [x] 公开 @calamus/core/umd 子入口及根 types 元数据，根入口仍为 ESM；UMD 子入口不提供单独 CommonJS 类型入口。
+- [x] 实际 tarball 在无 DOM 的 Node 环境验证全局、AMD、CommonJS 三种 UMD 分支，导出名称、平滑与 SVG 结果和 ESM 对照通过。
+- [x] 包白名单显式允许 UMD，体积脚本计入 .cjs；25 项归档文件验证通过。
+- [x] 79 项测试、生产构建、原生示例构建和包消费检查通过；README/API/发布清单同步更新。
+- [ ] 经典 script 的真实浏览器绘制与 MIME 托管检查待补。本轮 VM 仅测试模块加载和纯函数，不替代浏览器验收。
+
+构建方式参考 Vite library mode 文档：https://vite.dev/guide/build.html#library-mode 。实现使用仓库锁定的 Vite 7.3.8。UMD 静态托管时需正确的 JavaScript MIME，或将复制出的资产改名为 .js。包仍保留 private: true；未发布、未推送。

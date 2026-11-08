@@ -15,7 +15,7 @@ const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
 const totals = { javascript: { files: 0, rawBytes: 0, gzipBytes: 0 }, declarations: { files: 0, rawBytes: 0 } };
 for (const path of await files(join(root, 'dist'))) {
   const data = await readFile(path);
-  if (path.endsWith('.js')) {
+  if (path.endsWith('.js') || path.endsWith('.cjs')) {
     totals.javascript.files++;
     totals.javascript.rawBytes += data.length;
     totals.javascript.gzipBytes += gzipSync(data, { level: 9 }).length;
@@ -41,7 +41,7 @@ try {
     runtimeDependencies: manifest.dependencies ?? {},
     peerDependencies: manifest.peerDependencies ?? {},
     packedFiles: listing.stdout.trim().split('\n').sort(),
-    notes: 'gzipBytes sums independently compressed ESM files at level 9; not a tree-shaken browser bundle. Archive includes package metadata and declarations.',
+    notes: 'gzipBytes sums independently compressed ESM files at level 9; includes alternative ESM and UMD outputs, not a single tree-shaken browser bundle. Archive includes package metadata and declarations.',
   }, null, 2));
 } finally {
   await rm(temporary, { recursive: true, force: true });
