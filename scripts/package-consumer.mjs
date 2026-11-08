@@ -21,6 +21,13 @@ try {
   const archives = (await readdir(temporary)).filter(name => name.endsWith('.tgz'));
   assert.equal(archives.length, 1);
   const archive = join(temporary, archives[0]);
+  const packedFiles = run('tar', ['-tzf', archive], temporary).trim().split('\n');
+  const allowed = /^package\/(?:package\.json|README\.md|LICENSE(?:\.md|\.txt)?|dist\/[a-zA-Z0-9_-]+(?:\.js|\.d\.ts))$/;
+  for (const file of packedFiles) assert.match(file, allowed, `Unexpected packed file: ${file}`);
+  for (const required of ['package/package.json', 'package/README.md', 'package/dist/index.js', 'package/dist/index.d.ts']) {
+    assert.ok(packedFiles.includes(required), `Missing packed file: ${required}`);
+  }
+  console.log(`Verified ${packedFiles.length} archive entries against the package allowlist.`);
   await writeFile(join(consumer, 'package.json'), JSON.stringify({ name: 'calamus-package-consumer', private: true, type: 'module' }));
   await cp(join(root, 'scripts/fixtures/package-consumer'), consumer, { recursive: true });
   run('pnpm', ['add', archive, '--offline', '--ignore-scripts', '--store-dir', join(temporary, 'store')], consumer);

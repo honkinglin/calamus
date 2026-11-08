@@ -43,3 +43,5 @@ pnpm example:build
 透明高密度路径仍可能卡顿；近期渲染优化的浏览器回归、真实触屏/触控笔和跨浏览器验收尚未完成。作品保存在当前浏览器，本地多标签冲突合并及云同步未实现；建议导出 JSON 备份。未完成手势不会进入导出文件。
 
 [开发进度](docs/PROGRESS.md)区分实现完成与验收完成；[性能报告](docs/PERFORMANCE.md)保留测量条件，不将 Node 计算耗时当作浏览器帧率。
+
+[Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [Release checklist](docs/RELEASE_CHECKLIST.md)

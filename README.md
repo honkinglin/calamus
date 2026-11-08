@@ -74,3 +74,5 @@ Additional benchmarks and their limits are documented in [PERFORMANCE.md](docs/P
 Transparent dense paths can still be expensive. Recent rendering optimizations await browser pixel/performance regression checks. Real touch/stylus and cross-browser acceptance remain open. The playground stores drawings locally; multi-tab conflict merging and cloud sync are not implemented. Exported documents contain committed strokes, not unfinished gestures.
 
 See [progress](docs/PROGRESS.md) for completed increments and pending acceptance, and [architecture](docs/ARCHITECTURE.md) for ownership and rendering details.
+
+[Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [Release checklist](docs/RELEASE_CHECKLIST.md)
