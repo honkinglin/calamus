@@ -259,6 +259,41 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     const queryCount = queries.length;
     queries.at(-1).dispatchEvent(new Event('change'));
     assert.equal(queries.length, queryCount);
+    surface.style.touchAction = 'pan-x';
+    engine.destroy();
+    assert.equal(surface.style.touchAction, 'pan-x', 'repeated destruction must not override a later owner');
+    assert.equal(cache.width, 0, 'committed raster storage must be released');
+    assert.equal(cache.height, 0);
+
+    const throwingSurface = new Surface();
+    const callbackError = new Error('Host callback failed');
+    let idleCalls = 0;
+    const throwingEngine = new Calamus(throwingSurface, { onReplayChange: state => {
+      if (state === 'idle') {
+        idleCalls++;
+        assert.equal(throwingEngine.controller.signal.aborted, true, 'cleanup precedes host notification');
+        throwingSurface.style.touchAction = 'pan-y';
+        throwingEngine.destroy();
+        throw callbackError;
+      }
+    } });
+    const throwingObserver = observer;
+    throwingEngine.setStrokes([{ brush: { color: '#000', size: 6 }, points: [{ x: 1, y: 1, time: 0, pressure: null }] }]);
+    throwingEngine.play();
+    assert.throws(() => throwingEngine.destroy(), error => error === callbackError);
+    assert.equal(throwingObserver.disconnected, true, 'host exceptions must not prevent observer cleanup');
+    assert.equal(throwingSurface.style.touchAction, 'pan-y', 'host changes after cleanup must survive');
+    assert.equal(throwingEngine.committedCanvas.width, 0);
+    assert.equal(throwingEngine.committedCanvas.height, 0);
+    assert.equal(throwingEngine.controller.signal.aborted, true);
+    assert.equal(throwingEngine.active, null);
+    assert.equal(throwingEngine.playback, null);
+    assert.equal(frames.has(throwingEngine.playbackFrame), false);
+    throwingSurface.dispatchEvent(new Pointer('pointerdown', { pointerId: 9, button: 0, isPrimary: true, clientX: 1, clientY: 1 }));
+    assert.equal(throwingEngine.active, null, 'destroyed engine must no longer receive input');
+    throwingEngine.destroy();
+    assert.equal(idleCalls, 1, 'reentrant and repeated destroy must not notify again');
+
   } finally {
     for (const [name, descriptor] of saved) {
       if (descriptor) Object.defineProperty(globalThis, name, descriptor);

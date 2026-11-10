@@ -12,6 +12,10 @@ No published releases yet. Package version 0.1.0 is a development version.
 - Incremental sample processing, bounded geometry caches, streaming fallback and opaque raster-prefix rendering.
 - ESM declarations, standalone UMD (`CalamusSDK`) and isolated tarball consumer checks; no runtime dependencies.
 
+### Fixed
+
+- Engine destruction now completes resource cleanup before notifying host replay callbacks, so a callback exception cannot interrupt teardown. Repeated/reentrant destruction is inert and committed raster backing storage is released.
+
 ### Changed
 
 - Live brush configuration now uses the same validation as imported documents: hexadecimal colors only, width 0.01–4096, follow radius 0–4096 and boolean velocity width. Previously accepted out-of-contract settings now throw without replacing the brush. Logical canvas dimensions are restricted to 1–32768.

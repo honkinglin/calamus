@@ -418,13 +418,21 @@ export class Calamus {
   }
 
   destroy(): void {
+    if (this.destroyed) return;
     this.destroyed = true;
-    this.stopReplay();
+    const wasReplaying = this.playback !== null;
+    this.playback = null;
+    cancelAnimationFrame(this.playbackFrame);
     this.controller.abort();
     this.observer.disconnect();
     this.resolutionQuery?.removeEventListener('change', this.watchResolution);
     this.cancel();
     cancelAnimationFrame(this.frame);
+    this.frame = 0;
+    this.committedCanvas.width = 0;
+    this.committedCanvas.height = 0;
     this.canvas.style.touchAction = this.originalTouchAction;
+    // Notify only after cleanup: host callbacks may throw or mount another instance.
+    if (wasReplaying) this.options.onReplayChange?.('idle');
   }
 }
