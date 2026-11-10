@@ -12,6 +12,11 @@ No published releases yet. Package version 0.1.0 is a development version.
 - Incremental sample processing, bounded geometry caches, streaming fallback and opaque raster-prefix rendering.
 - ESM declarations, standalone UMD (`CalamusSDK`) and isolated tarball consumer checks; no runtime dependencies.
 
+### Changed
+
+- Live brush configuration now uses the same validation as imported documents: hexadecimal colors only, width 0.01–4096, follow radius 0–4096 and boolean velocity width. Previously accepted out-of-contract settings now throw without replacing the brush. Logical canvas dimensions are restricted to 1–32768.
+- Updating a brush after destroying its engine now throws.
+
 ### Playground and examples
 
 - Local drawing library, recoverable deletion, zoom/pan, themes and brush presets.

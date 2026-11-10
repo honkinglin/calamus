@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Calamus } from '../dist/index.js';
+import { Calamus, parseDocument } from '../dist/index.js';
 
 test('committed geometry is cached, DPR invalidates it and destroy removes observers', async () => {
   const saved = new Map();
@@ -69,6 +69,16 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     const replayStates = [];
     const engine = new Calamus(surface, { onReplayChange: state => replayStates.push(state) });
     engine.setStrokes([{ brush: { color: '#000', size: 5 }, points: [{ x: 0, y: 0, time: 0, pressure: null }] }]);
+    for (const invalid of [0, 0.5, 32769, Infinity, NaN]) {
+      assert.throws(() => new Calamus(surface, { width: invalid }), /dimensions/);
+      assert.throws(() => new Calamus(surface, { height: invalid }), /dimensions/);
+    }
+    const originalBrush = { ...engine.brush };
+    for (const invalid of [{ color: 'red' }, { color: '#12' }, { size: 0.001 }, { size: 4097 },
+      { smoothing: NaN }, { stabilizer: 4097 }, { velocityWidth: 'yes' }]) {
+      assert.throws(() => engine.setBrush(invalid));
+      assert.deepEqual(engine.brush, originalBrush, 'invalid settings must not replace the current brush');
+    }
     const before = engine.exportJSON();
     const historyBefore = engine.state;
     assert.throws(() => engine.loadJSON('{"schemaVersion":2}'));
@@ -162,10 +172,14 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     const input = (type, values = {}) => surface.dispatchEvent(new Pointer(type, {
       pointerId: 3, button: 0, isPrimary: true, clientX: 0, clientY: 0, pointerType: 'touch', ...values,
     }));
+    engine.setBrush({ color: '#aBc8', size: 0.01, smoothing: 1, stabilizer: 4096, velocityWidth: false });
     input('pointerdown');
     input('pointercancel', { pointerId: 4 });
     input('pointerup');
     assert.equal(engine.state.strokes, 1, 'other pointers must not cancel the primary touch');
+    const roundTrip = parseDocument(engine.exportJSON());
+    assert.deepEqual(roundTrip.strokes, engine.getStrokes());
+    engine.setBrush(originalBrush);
     assert.equal(engine.getStrokes()[0].points[0].x, 0);
     assert.equal(engine.getStrokes()[0].points[0].pressure, null);
     input('pointerdown', { clientX: 50, clientY: 50 });
@@ -239,6 +253,7 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
       if (outcome !== 'destroy') assert.equal(engine.getStrokes().length, beforeGesture + (outcome === 'pointerup' ? 1 : 0));
     }
     assert.throws(() => engine.undo(), /destroyed/);
+    assert.throws(() => engine.setBrush({ size: 6 }), /destroyed/);
     assert.equal(observer.disconnected, true);
     assert.equal(surface.style.touchAction, 'auto');
     const queryCount = queries.length;

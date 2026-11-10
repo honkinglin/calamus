@@ -51,7 +51,7 @@ drawing.destroy();
 
 The engine maps pointer coordinates into the logical document size and adapts the backing canvas to device pixel ratio. Constructing an engine requires a browser with Canvas 2D, Pointer Events, ResizeObserver, and matchMedia. Importing the package and calling its pure geometry/document functions does not require a DOM.
 
-Exports contain committed strokes, not an unfinished gesture. Store the returned JSON or Blob in your application; the SDK does not upload or persist documents automatically. Use hexadecimal brush colors for JSON round trips. Transparent strokes retain a single fill; very dense transparent paths can still be expensive.
+Exports contain committed strokes, not an unfinished gesture. Store the returned JSON or Blob in your application; the SDK does not upload or persist documents automatically. Brush configuration accepts only 3/4/6/8-digit hexadecimal colors, sizes 0.01–4096, and follow radii 0–4096. Logical canvas dimensions must be 1–32768. Invalid settings are rejected before replacing the current brush. Transparent strokes retain a single fill; very dense transparent paths can still be expensive.
 
 ## Pure functions
 

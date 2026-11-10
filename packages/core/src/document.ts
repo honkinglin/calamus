@@ -1,4 +1,4 @@
-import type { Stroke } from './index.js';
+import type { Brush, Stroke } from './index.js';
 
 export interface CalamusDocument {
   schemaVersion: 1;
@@ -34,16 +34,10 @@ export function validateDocument(input: unknown): CalamusDocument {
   let count = 0;
   const strokes = data.strokes.map(value => {
     const stroke = record(value);
-    const brush = record(stroke.brush);
-    if (typeof brush.color !== 'string' || !/^#(?:[\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i.test(brush.color)) {
-      throw new TypeError('Document colors must use hexadecimal notation.');
-    }
+    const brush = validateBrush(stroke.brush);
     if (!Array.isArray(stroke.points) || stroke.points.length === 0) throw new TypeError('Stroke has no points.');
     count += stroke.points.length;
     if (count > 250000) throw new RangeError('Document contains too many points.');
-    if (brush.velocityWidth !== undefined && typeof brush.velocityWidth !== 'boolean') {
-      throw new TypeError('Invalid velocity width setting.');
-    }
     let previousTime = 0;
     const points = stroke.points.map(value => {
       const point = record(value);
@@ -57,15 +51,27 @@ export function validateDocument(input: unknown): CalamusDocument {
       };
     });
     return {
-      brush: {
-        color: brush.color,
-        size: number(brush.size, 0.01, 4096),
-        smoothing: number(brush.smoothing ?? 0, 0, 1),
-        stabilizer: number(brush.stabilizer ?? 0, 0, 4096),
-        velocityWidth: brush.velocityWidth as boolean | undefined,
-      },
+      brush,
       points,
     };
   });
   return { schemaVersion: 1, width, height, strokes };
+}
+
+/** Shared persisted/live brush contract. Callers merge their defaults before validation. */
+export function validateBrush(input: unknown): Brush {
+  const brush = record(input);
+  if (typeof brush.color !== 'string' || !/^#(?:[\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i.test(brush.color)) {
+    throw new TypeError('Brush colors must use hexadecimal notation.');
+  }
+  if (brush.velocityWidth !== undefined && typeof brush.velocityWidth !== 'boolean') {
+    throw new TypeError('Invalid velocity width setting.');
+  }
+  return {
+    color: brush.color,
+    size: number(brush.size, 0.01, 4096),
+    smoothing: number(brush.smoothing ?? 0, 0, 1),
+    stabilizer: number(brush.stabilizer ?? 0, 0, 4096),
+    velocityWidth: brush.velocityWidth as boolean | undefined,
+  };
 }

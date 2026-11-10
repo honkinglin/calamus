@@ -8,7 +8,7 @@ import type { CropOptions } from './bounds.js';
 import { StrokeHitCache } from './hit-test.js';
 import { replayDuration, replayFrame } from './replay.js';
 import { createSVG } from './export.js';
-import { parseDocument, validateDocument } from './document.js';
+import { parseDocument, validateDocument, validateBrush } from './document.js';
 import { drawStroke, PAPER } from './index.js';
 import type { Brush, Point, Stroke } from './index.js';
 
@@ -60,8 +60,8 @@ export class Calamus {
   constructor(private canvas: HTMLCanvasElement, private options: CalamusOptions = {}) {
     this.width = options.width ?? PAPER.width;
     this.height = options.height ?? PAPER.height;
-    if (![this.width, this.height].every(value => Number.isFinite(value) && value > 0)) {
-      throw new RangeError('Canvas dimensions must be positive finite numbers.');
+    if (![this.width, this.height].every(value => Number.isFinite(value) && value >= 1 && value <= 32768)) {
+      throw new RangeError('Canvas dimensions must be finite numbers between 1 and 32768.');
     }
     this.committedCanvas = canvas.ownerDocument.createElement('canvas');
     this.brush = { color: '#253631', size: 6, smoothing: 0.55, stabilizer: 0, velocityWidth: true };
@@ -98,15 +98,8 @@ export class Calamus {
   }
 
   setBrush(settings: Partial<Brush>): void {
-    const next = { ...this.brush, ...settings };
-    if (!Number.isFinite(next.size) || next.size <= 0) throw new RangeError('Brush size must be positive.');
-    if (next.smoothing !== undefined && (!Number.isFinite(next.smoothing) || next.smoothing < 0 || next.smoothing > 1)) {
-      throw new RangeError('Smoothing must be between zero and one.');
-    }
-    if (next.stabilizer !== undefined && (!Number.isFinite(next.stabilizer) || next.stabilizer < 0)) {
-      throw new RangeError('Stabilizer radius must be nonnegative.');
-    }
-    this.brush = next;
+    this.assertAlive();
+    this.brush = validateBrush({ ...this.brush, ...settings });
   }
 
   play(options: { speed?: number } = {}): void {
