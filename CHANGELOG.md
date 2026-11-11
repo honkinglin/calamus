@@ -14,6 +14,8 @@ No published releases yet. Package version 0.1.0 is a development version.
 
 ### Fixed
 
+- Invalid pointer samples and zero-sized canvas bounds no longer enter committed strokes. Invalid in-progress input cancels the gesture (including provisional erasures); regressing event timestamps are normalized to preserve document ordering.
+
 - Engine destruction now completes resource cleanup before notifying host replay callbacks, so a callback exception cannot interrupt teardown. Repeated/reentrant destruction is inert and committed raster backing storage is released.
 
 ### Changed

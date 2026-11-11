@@ -271,20 +271,25 @@ export class Calamus {
     this.options.onChange?.(this.state);
   }
 
-  private sample(event: PointerEvent): Point {
+  private sample(event: PointerEvent): Point | null {
     const bounds = this.canvas.getBoundingClientRect();
-    return {
-      x: (event.clientX - bounds.left) * this.width / bounds.width,
-      y: (event.clientY - bounds.top) * this.height / bounds.height,
-      time: Math.max(0, event.timeStamp - (this.active?.start ?? event.timeStamp)),
-      pressure: event.pointerType === 'pen' ? event.pressure : null,
-    };
+    if (![bounds.left, bounds.top, bounds.width, bounds.height, event.clientX, event.clientY, event.timeStamp].every(Number.isFinite)
+      || bounds.width <= 0 || bounds.height <= 0) return null;
+    const x = (event.clientX - bounds.left) * this.width / bounds.width;
+    const y = (event.clientY - bounds.top) * this.height / bounds.height;
+    const pressure = event.pointerType === 'pen' ? event.pressure : null;
+    const time = Math.max(this.active?.stroke.points.at(-1)?.time ?? 0,
+      event.timeStamp - (this.active?.start ?? event.timeStamp));
+    if (![x, y, time].every(Number.isFinite) || Math.abs(x) > 1_000_000 || Math.abs(y) > 1_000_000
+      || time > 86_400_000 || (pressure !== null && (!Number.isFinite(pressure) || pressure < 0 || pressure > 1))) return null;
+    return { x, y, time, pressure };
   }
 
   private begin = (event: PointerEvent): void => {
     if (this.playback || this.active || event.button !== 0 || !event.isPrimary) return;
-    this.canvas.setPointerCapture(event.pointerId);
     const point = this.sample(event);
+    if (!point) return;
+    this.canvas.setPointerCapture(event.pointerId);
     const brush = { ...this.brush };
     const processor = new StrokeProcessor(brush);
     const processed = this.tool === 'pen' ? [processor.append(point)] : [];
@@ -304,6 +309,7 @@ export class Calamus {
     const samples = event.getCoalescedEvents?.() ?? [];
     for (const sample of samples.length ? samples : [event]) {
       const point = this.sample(sample);
+      if (!point) { this.cancel(); return; }
       const previous = this.active.stroke.points.at(-1)!;
       this.active.stroke.points.push(point);
       if (this.tool === 'pen') {
@@ -321,6 +327,7 @@ export class Calamus {
     const stroke = this.active.stroke;
     const last = stroke.points[stroke.points.length - 1];
     const end = this.sample(event);
+    if (!end) { this.cancel(); return; }
     if (end.x !== last.x || end.y !== last.y) {
       stroke.points.push({ ...end, pressure: last.pressure });
     }

@@ -172,6 +172,32 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     const input = (type, values = {}) => surface.dispatchEvent(new Pointer(type, {
       pointerId: 3, button: 0, isPrimary: true, clientX: 0, clientY: 0, pointerType: 'touch', ...values,
     }));
+    const normalBounds = surface.getBoundingClientRect;
+    for (const invalidBounds of [
+      { left: 0, top: 0, width: 0, height: 350 },
+      { left: 0, top: 0, width: 500, height: 0 },
+      { left: NaN, top: 0, width: 500, height: 350 },
+    ]) {
+      surface.getBoundingClientRect = () => invalidBounds;
+      input('pointerdown');
+      assert.equal(engine.active, null, 'invalid bounds must reject starting a gesture');
+      surface.getBoundingClientRect = normalBounds;
+      input('pointerdown');
+      surface.getBoundingClientRect = () => invalidBounds;
+      input('pointermove', { clientX: 10 });
+      assert.equal(engine.active, null, 'invalid move must cancel the gesture');
+      assert.equal(engine.state.strokes, 0);
+      surface.getBoundingClientRect = normalBounds;
+    }
+    for (const invalid of [{ clientX: Infinity }, { clientY: NaN }, { clientX: 1e12 },
+      { pointerType: 'pen', pressure: 2 }, { pointerType: 'pen', pressure: NaN }]) {
+      input('pointerdown', invalid);
+      assert.equal(engine.active, null);
+      input('pointerdown');
+      input('pointerup', invalid);
+      assert.equal(engine.active, null);
+      assert.equal(engine.state.strokes, 0, 'invalid final input must not commit a partial gesture');
+    }
     engine.setBrush({ color: '#aBc8', size: 0.01, smoothing: 1, stabilizer: 4096, velocityWidth: false });
     input('pointerdown');
     input('pointercancel', { pointerId: 4 });
@@ -180,6 +206,39 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     const roundTrip = parseDocument(engine.exportJSON());
     assert.deepEqual(roundTrip.strokes, engine.getStrokes());
     engine.setBrush(originalBrush);
+    const beforeInvalidErase = engine.exportJSON();
+    const beforeInvalidEraseState = engine.state;
+    engine.setTool('eraser');
+    input('pointerdown');
+    assert.equal(engine.erased.size, 1);
+    surface.getBoundingClientRect = () => ({ left: 0, top: 0, width: 0, height: 0 });
+    input('pointermove');
+    surface.getBoundingClientRect = normalBounds;
+    assert.equal(engine.erased.size, 0, 'invalid erase sampling restores provisional removals');
+    assert.equal(engine.exportJSON(), beforeInvalidErase);
+    assert.deepEqual(engine.state, beforeInvalidEraseState);
+    engine.setTool('pen');
+    input('pointerdown');
+    input('pointermove', { getCoalescedEvents: () => [
+      new Pointer('pointermove', { clientX: 10, clientY: 10, pointerType: 'mouse' }),
+      new Pointer('pointermove', { clientX: NaN, clientY: 10, pointerType: 'mouse' }),
+    ] });
+    assert.equal(engine.active, null, 'invalid coalesced input cancels the entire gesture');
+    assert.equal(engine.exportJSON(), beforeInvalidErase);
+
+    const temporal = (type, time, x) => {
+      const event = new Pointer(type, { pointerId: 3, button: 0, isPrimary: true, clientX: x, clientY: 0, pointerType: 'mouse' });
+      Object.defineProperty(event, 'timeStamp', { value: time });
+      surface.dispatchEvent(event);
+    };
+    temporal('pointerdown', 100, 0);
+    temporal('pointermove', 120, 10);
+    temporal('pointermove', 110, 20);
+    temporal('pointerup', 115, 30);
+    assert.deepEqual(engine.getStrokes().at(-1).points.map(point => point.time), [0, 20, 20, 20]);
+    assert.doesNotThrow(() => parseDocument(engine.exportJSON()));
+    engine.undo();
+
     assert.equal(engine.getStrokes()[0].points[0].x, 0);
     assert.equal(engine.getStrokes()[0].points[0].pressure, null);
     input('pointerdown', { clientX: 50, clientY: 50 });
