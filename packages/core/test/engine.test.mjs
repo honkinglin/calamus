@@ -324,6 +324,62 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     assert.equal(cache.width, 0, 'committed raster storage must be released');
     assert.equal(cache.height, 0);
 
+    const capacitySurface = new Surface();
+    const limits = [];
+    const capacityEngine = new Calamus(capacitySurface, { onInputLimit: limit => {
+      assert.equal(capacityEngine.active, null, 'limit notification follows cancellation');
+      limits.push(limit);
+    } });
+    const capacityInput = (type, values = {}) => capacitySurface.dispatchEvent(new Pointer(type, {
+      pointerId: 7, button: 0, isPrimary: true, clientX: 10, clientY: 10, pointerType: 'mouse', ...values,
+    }));
+    const dot = { brush: { color: '#000', size: 1 }, points: [{ x: 20, y: 20, time: 0, pressure: null }] };
+    capacityEngine.setStrokes(Array.from({ length: 10000 }, () => dot));
+    assert.equal(capacityEngine.pointCount, 10000);
+    capacityInput('pointerdown');
+    assert.equal(limits.at(-1), 'strokes');
+    assert.equal(capacityEngine.active, null);
+    capacityEngine.clear();
+    capacityEngine.undo();
+    assert.equal(capacityEngine.pointCount, 10000);
+    capacityEngine.redo();
+    assert.equal(capacityEngine.pointCount, 0);
+    // Inject only the cached total to exercise the high point boundary without rasterizing 250k points.
+    capacityEngine.pointCount = 250000;
+    capacityInput('pointerdown');
+    assert.equal(limits.at(-1), 'points');
+    capacityEngine.pointCount = 249999;
+    for (const terminal of ['pointermove', 'pointerup']) {
+      const original = capacityEngine.exportJSON();
+      const originalHistory = capacityEngine.state;
+      capacityInput('pointerdown');
+      capacityInput(terminal, { clientX: 20 });
+      assert.equal(capacityEngine.active, null);
+      assert.equal(capacityEngine.exportJSON(), original);
+      assert.deepEqual(capacityEngine.state, originalHistory);
+    }
+    capacityEngine.pointCount = 249998;
+    capacityInput('pointerdown');
+    capacityInput('pointermove', { getCoalescedEvents: () => [
+      new Pointer('pointermove', { clientX: 11, clientY: 10, pointerType: 'mouse' }),
+      new Pointer('pointermove', { clientX: 12, clientY: 10, pointerType: 'mouse' }),
+    ] });
+    assert.equal(capacityEngine.active, null, 'coalesced samples cannot bypass the point budget');
+    assert.equal(capacityEngine.state.strokes, 0);
+    capacityEngine.pointCount = 249999;
+    capacityInput('pointerdown');
+    capacityInput('pointerup');
+    assert.equal(capacityEngine.state.strokes, 1, 'a dot at the final available point can commit');
+    assert.equal(capacityEngine.pointCount, 1, 'commit recomputes the count from the real document');
+    capacityEngine.pointCount = 250000;
+    capacityEngine.setTool('eraser');
+    capacityInput('pointerdown');
+    for (let i = 0; i < 20; i++) capacityInput('pointermove', { clientX: 10 + i });
+    assert.equal(capacityEngine.active.stroke.points.length, 1, 'eraser retains only the latest sweep endpoint');
+    capacityInput('pointerup');
+    assert.equal(capacityEngine.pointCount, 0, 'erasing releases capacity even when the document was full');
+    capacityEngine.destroy();
+
     const throwingSurface = new Surface();
     const callbackError = new Error('Host callback failed');
     let idleCalls = 0;

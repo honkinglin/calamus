@@ -8,7 +8,7 @@ import type { CropOptions } from './bounds.js';
 import { StrokeHitCache } from './hit-test.js';
 import { replayDuration, replayFrame } from './replay.js';
 import { createSVG } from './export.js';
-import { parseDocument, validateDocument, validateBrush } from './document.js';
+import { parseDocument, validateDocument, validateBrush, MAX_STROKES, MAX_POINTS } from './document.js';
 import { drawStroke, PAPER } from './index.js';
 import type { Brush, Point, Stroke } from './index.js';
 
@@ -16,6 +16,7 @@ export interface CalamusOptions {
   width?: number;
   height?: number;
   brush?: Partial<Brush>;
+  onInputLimit?: (limit: 'strokes' | 'points') => void;
   onStroke?: (stroke: Stroke) => void;
   onChange?: (state: HistoryState) => void;
   onReplayChange?: (state: ReplayState) => void;
@@ -40,6 +41,7 @@ export class Calamus {
   private erased = new Set<Stroke>();
   private hitCache = new StrokeHitCache();
   private strokes: Stroke[] = [];
+  private pointCount = 0;
   private playback: { elapsed: number; previous: number | null; paused: boolean; speed: number } | null = null;
   private playbackFrame = 0;
   private past: Stroke[][] = [];
@@ -266,6 +268,7 @@ export class Calamus {
   }
 
   private changed(): void {
+    this.pointCount = this.strokes.reduce((sum, stroke) => sum + stroke.points.length, 0);
     this.committedDirty = true;
     this.render();
     this.options.onChange?.(this.state);
@@ -287,6 +290,10 @@ export class Calamus {
 
   private begin = (event: PointerEvent): void => {
     if (this.playback || this.active || event.button !== 0 || !event.isPrimary) return;
+    if (this.tool === 'pen' && (this.strokes.length >= MAX_STROKES || this.pointCount >= MAX_POINTS)) {
+      this.options.onInputLimit?.(this.strokes.length >= MAX_STROKES ? 'strokes' : 'points');
+      return;
+    }
     const point = this.sample(event);
     if (!point) return;
     this.canvas.setPointerCapture(event.pointerId);
@@ -311,7 +318,13 @@ export class Calamus {
       const point = this.sample(sample);
       if (!point) { this.cancel(); return; }
       const previous = this.active.stroke.points.at(-1)!;
-      this.active.stroke.points.push(point);
+      if (this.tool === 'pen' && this.pointCount + this.active.stroke.points.length >= MAX_POINTS) {
+        this.cancel();
+        this.options.onInputLimit?.('points');
+        return;
+      }
+      if (this.tool === 'eraser') this.active.stroke.points = [point];
+      else this.active.stroke.points.push(point);
       if (this.tool === 'pen') {
         const processed = this.active.processor.append(point);
         this.active.processed.push(processed);
@@ -328,7 +341,12 @@ export class Calamus {
     const last = stroke.points[stroke.points.length - 1];
     const end = this.sample(event);
     if (!end) { this.cancel(); return; }
-    if (end.x !== last.x || end.y !== last.y) {
+    if (this.tool === 'pen' && (end.x !== last.x || end.y !== last.y)) {
+      if (this.pointCount + stroke.points.length >= MAX_POINTS) {
+        this.cancel();
+        this.options.onInputLimit?.('points');
+        return;
+      }
       stroke.points.push({ ...end, pressure: last.pressure });
     }
     this.active?.raster.dispose();

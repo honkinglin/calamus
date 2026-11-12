@@ -1,5 +1,8 @@
 import type { Brush, Stroke } from './index.js';
 
+export const MAX_STROKES = 10_000;
+export const MAX_POINTS = 250_000;
+
 export interface CalamusDocument {
   schemaVersion: 1;
   width: number;
@@ -30,14 +33,14 @@ export function validateDocument(input: unknown): CalamusDocument {
   if (data.schemaVersion !== 1) throw new TypeError('Unsupported document version.');
   const width = number(data.width, 1, 32768);
   const height = number(data.height, 1, 32768);
-  if (!Array.isArray(data.strokes) || data.strokes.length > 10000) throw new RangeError('Invalid stroke count.');
+  if (!Array.isArray(data.strokes) || data.strokes.length > MAX_STROKES) throw new RangeError('Invalid stroke count.');
   let count = 0;
   const strokes = data.strokes.map(value => {
     const stroke = record(value);
     const brush = validateBrush(stroke.brush);
     if (!Array.isArray(stroke.points) || stroke.points.length === 0) throw new TypeError('Stroke has no points.');
     count += stroke.points.length;
-    if (count > 250000) throw new RangeError('Document contains too many points.');
+    if (count > MAX_POINTS) throw new RangeError('Document contains too many points.');
     let previousTime = 0;
     const points = stroke.points.map(value => {
       const point = record(value);

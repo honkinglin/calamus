@@ -139,6 +139,7 @@ function App() {
     const collection = createLibrary(drawingStore);
     library.current = collection;
     const board = new Calamus(canvas.current, {
+      onInputLimit: limit => setFileMessage(`Drawing ${limit === 'strokes' ? 'stroke' : 'point'} limit reached. The new stroke was not saved. Undo, erase, or start a new drawing.`),
       onChange: state => {
         documentRevision.current++;
         setCounts(state);

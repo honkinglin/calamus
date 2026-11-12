@@ -28,7 +28,9 @@ function brush() {
     stabilizer: stability.value === 'follow' ? 12 : 0 });
 }
 function mount() {
-  engine = new Calamus(canvas, { width: 1000, height: 700, onChange: () => {
+  engine = new Calamus(canvas, { width: 1000, height: 700,
+    onInputLimit: limit => { status.textContent = `Drawing ${limit} limit reached. New stroke cancelled; undo, erase or clear to continue.`; },
+    onChange: () => {
     sync(); status.textContent = `${engine?.state.strokes ?? 0} completed strokes.`;
   } });
   if (snapshot) engine.loadJSON(snapshot, { resetHistory: true });
