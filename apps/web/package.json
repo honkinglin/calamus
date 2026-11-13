@@ -3,7 +3,21 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "scripts": {"dev": "vite", "build": "tsc --noEmit && vite build", "check": "tsc --noEmit"},
-  "dependencies": {"@calamus/core": "workspace:*", "react": "19.3.1", "react-dom": "19.3.1"},
-  "devDependencies": {"vite": "7.3.8", "@types/react": "19.3.0", "@types/react-dom": "19.3.0"}
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@calamus/core": "workspace:*",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tailwindcss": "^4.3.5",
+    "vite": "7.3.8"
+  }
 }

@@ -10,6 +10,7 @@ import { createThumbnail } from './thumbnail';
 import { clampZoom, zoomScroll } from './viewport';
 import { brushColor, defaultPreferences, parsePreferences } from './preferences';
 import { StrokeLab } from './StrokeLab';
+import { Icon } from './Icon';
 import './style.css';
 
 const emptyDocument = JSON.stringify({ schemaVersion: 1, width: 1000, height: 700, strokes: [] });
@@ -17,6 +18,18 @@ const emptyDocument = JSON.stringify({ schemaVersion: 1, width: 1000, height: 70
 const palette = ['#253631', '#477c6c', '#b85c4c', '#ba8c46', '#5f6aab'];
 
 function App() {
+  const exportMenu = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const dismiss = (event: PointerEvent) => {
+      if (event.target instanceof Node && !exportMenu.current?.contains(event.target)) exportMenu.current?.removeAttribute('open');
+    };
+    document.addEventListener('pointerdown', dismiss);
+    return () => document.removeEventListener('pointerdown', dismiss);
+  }, []);
+  function closeExportMenu() {
+    exportMenu.current?.removeAttribute('open');
+    exportMenu.current?.querySelector('summary')?.focus();
+  }
   const documentRevision = useRef(0);
   const [labOpen, setLabOpen] = useState(false);
   const labButton = useRef<HTMLButtonElement>(null);
@@ -324,41 +337,54 @@ function App() {
   return (
     <>
       <div inert={!ready}>
-      <header>
-        <a className="brand" href="./" aria-label="Calamus home"><span aria-hidden="true">✒</span> Calamus</a>
-        <div className="actions">
+      <header className="app-header">
+        <div className="flex min-w-0 items-center gap-5">
+          <a className="brand" href="./" aria-label="Calamus home"><span className="brand-mark"><Icon name="pen" /></span><span>calamus<span className="brand-dot">.</span></span></a>
+          <span className="header-divider" aria-hidden="true" />
+          <button aria-label={`Drawings: ${activeDrawing?.name ?? 'Untitled drawing'}`} className="document-switch" ref={libraryButton} disabled={!activeDrawing} aria-haspopup="dialog"
+            onClick={() => { setDrawingName(activeDrawing?.name ?? ''); setDrawings(library.current?.list() ?? []); setTrash(library.current?.trash() ?? []); setLibraryMessage(''); setLibraryOpen(true); }}>
+            <Icon name="folder" /><span className="truncate">{activeDrawing?.name ?? 'Untitled drawing'}</span><Icon name="chevron" />
+          </button>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
           <input ref={fileInput} type="file" accept=".json,application/json" hidden
             onChange={event => { const file = event.currentTarget.files?.[0]; if (file) void importer.current?.read(file); event.currentTarget.value = ''; }} />
-          <button onClick={() => fileInput.current?.click()}>Import JSON</button>
-          <button onClick={() => exportFile('JSON')}>Export JSON</button>
-          <button onClick={() => exportFile('SVG')}>Export SVG</button>
-          <button className="primary" disabled={exporting} onClick={() => void exportImage()}>{exporting ? 'Exporting…' : 'Export PNG'}</button>
+          <button className="quiet-button import-button" aria-label="Import JSON" title="Import JSON" onClick={() => fileInput.current?.click()}><Icon name="upload" /><span>Import</span></button>
+          <details ref={exportMenu} className="export-menu" onKeyDown={event => {
+            if (event.key === 'Escape') { event.preventDefault(); event.currentTarget.open = false; event.currentTarget.querySelector('summary')?.focus(); }
+          }} onBlur={event => {
+            if (event.relatedTarget instanceof Node && !event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false;
+          }}>
+            <summary className="primary"><Icon name="download" />Export<Icon name="chevron" /></summary>
+            <div className="export-popover">
+              <p className="eyebrow">SAVE A COPY</p>
+              <button disabled={exporting} onClick={() => { closeExportMenu(); void exportImage(); }}>{exporting ? 'Exporting…' : 'PNG image'}<span>Raster</span></button>
+              <button onClick={() => { closeExportMenu(); exportFile('SVG'); }}>SVG image<span>Vector</span></button>
+              <button onClick={() => { closeExportMenu(); exportFile('JSON'); }}>Calamus document<span>JSON</span></button>
+            </div>
+          </details>
         </div>
       </header>
-      <main>
+      <main className="studio-layout">
         <section className="workspace" aria-label="Drawing workspace">
-          <div className="workbar">
-            <h1>{activeDrawing?.name ?? 'Untitled drawing'}</h1>
-            <button ref={libraryButton} disabled={!activeDrawing} aria-haspopup="dialog"
-              onClick={() => { setDrawingName(activeDrawing?.name ?? ''); setDrawings(library.current?.list() ?? []); setTrash(library.current?.trash() ?? []); setLibraryMessage(''); setLibraryOpen(true); }}>Drawings</button>
-            {mobile && <button ref={settingsButton} aria-haspopup="dialog" aria-expanded={settingsOpen}
-              onClick={() => setSettingsOpen(true)}>Settings</button>}
-            <div className="actions">
-              <button disabled={!counts.undo} onClick={() => step(false)}>Undo</button>
-              <button disabled={!counts.redo} onClick={() => step(true)}>Redo</button>
-              <button disabled={!counts.strokes} onClick={() => engine.current?.clear()}>Clear</button>
+          <div className="workspace-heading">
+            <div><p className="eyebrow">YOUR CREATIVE SPACE</p><h1>Make room for an idea.</h1></div>
+            <button ref={labButton} className="quiet-button lab-launch" aria-label="Stroke lab" title="Stroke lab" aria-haspopup="dialog" onClick={() => setLabOpen(true)}><Icon name="lab" /><span>Stroke lab</span></button>
+          </div>
+          <div className="toolbar-row">
+            <div className="tool-dock" role="group" aria-label="Drawing tools">
+              <button title="Pen (B)" aria-label="Pen" aria-keyshortcuts="B" disabled={viewGesture} aria-pressed={!hand && tool === 'pen'} onClick={() => { setHand(false); setTool('pen'); }}><Icon name="pen" /><kbd>B</kbd></button>
+              <button title="Eraser (E)" aria-label="Eraser" aria-keyshortcuts="E" disabled={viewGesture} aria-pressed={!hand && tool === 'eraser'} onClick={() => { setHand(false); setTool('eraser'); }}><Icon name="eraser" /><kbd>E</kbd></button>
+              <button disabled={viewGesture} aria-pressed={hand} aria-keyshortcuts="H" title="Pan view (H)" aria-label="Hand" onClick={() => setHand(value => !value)}><Icon name="hand" /><kbd>H</kbd></button>
+              <span className="dock-divider" />
+              <button title="Undo" aria-label="Undo" disabled={!counts.undo} onClick={() => step(false)}><Icon name="undo" /></button>
+              <button title="Redo" aria-label="Redo" disabled={!counts.redo} onClick={() => step(true)}><Icon name="redo" /></button>
+              <span className="dock-divider" />
+              <button className="danger-button" title="Clear canvas" aria-label="Clear canvas" disabled={!counts.strokes} onClick={() => engine.current?.clear()}><Icon name="trash" /></button>
             </div>
+            {mobile && <button ref={settingsButton} className="settings-toggle" aria-label="Drawing settings" aria-haspopup="dialog" aria-expanded={settingsOpen} onClick={() => setSettingsOpen(true)}><Icon name="settings" /></button>}
           </div>
-          <button ref={labButton} className="lab-launch" aria-haspopup="dialog" onClick={() => setLabOpen(true)}>Stroke lab</button>
-          <p role="status">{fileMessage}</p>
-          <div className="actions view-controls" role="group" aria-label="Canvas view">
-            <button disabled={viewGesture || zoom <= 1} onClick={() => setZoom(value => clampZoom(value - 0.25))} aria-label="Zoom out">−</button>
-            <output aria-live="polite">{Math.round(zoom * 100)}%</output>
-            <button disabled={viewGesture || zoom >= 3} onClick={() => setZoom(value => clampZoom(value + 0.25))} aria-label="Zoom in">+</button>
-            <button disabled={viewGesture} onClick={() => { setZoom(1); viewport.current?.scrollTo(0, 0); }}>Fit view</button>
-            <button disabled={viewGesture} aria-pressed={hand} aria-keyshortcuts="H" title="Pan view (H)"
-              onClick={() => setHand(value => !value)}>Hand</button>
-          </div>
+          <p className="file-message" role="status">{fileMessage}</p>
           <div ref={viewport} className={'canvas-viewport' + (hand ? ' hand-view' : '')} tabIndex={0}
             aria-label="Canvas viewport" onPointerDownCapture={event => {
               if (hand) { event.stopPropagation(); event.preventDefault(); }
@@ -382,40 +408,46 @@ function App() {
             onLostPointerCapture={event => finishViewGesture(event.pointerId)}>
             <div className={'paper ' + paper} style={{ width: `${zoom * 100}%`, backgroundColor: preferences.paperColor }}>
               <canvas ref={canvas} aria-label="Drawing canvas" onPointerDownCapture={() => { documentRevision.current++; }} />
-              {!counts.strokes && <span className="paper-hint">Draw anywhere to begin</span>}
+              {!counts.strokes && !viewGesture && <div className="paper-hint"><span className="hint-icon"><Icon name="pen" width="26" height="26" /></span><span>Your next idea starts here</span><small>Pick a color. Make your mark.</small></div>}
             </div>
           </div>
-          <p className="status">{counts.strokes} {counts.strokes === 1 ? 'stroke' : 'strokes'} <span>1000 × 700 px</span></p>
+          <div className="canvas-footer">
+            <p className="status"><span className="status-dot" />{counts.strokes} {counts.strokes === 1 ? 'stroke' : 'strokes'}<span className="dimension-label">1000 × 700</span></p>
+            <div className="view-controls" role="group" aria-label="Canvas view">
+              <button disabled={viewGesture || zoom <= 1} onClick={() => setZoom(value => clampZoom(value - 0.25))} aria-label="Zoom out"><Icon name="minus" /></button>
+              <output aria-live="polite">{Math.round(zoom * 100)}%</output>
+              <button disabled={viewGesture || zoom >= 3} onClick={() => setZoom(value => clampZoom(value + 0.25))} aria-label="Zoom in"><Icon name="plus" /></button>
+              <span className="dock-divider" /><button title="Fit view" aria-label="Fit view" disabled={viewGesture} onClick={() => { setZoom(1); viewport.current?.scrollTo(0, 0); }}><Icon name="fit" /></button>
+            </div>
+          </div>
         </section>
         <dialog ref={panel} className="settings-panel" aria-label="Drawing settings"
           onCancel={() => setSettingsOpen(false)}
           onClose={() => {
             if (mobile && !panel.current?.open) settingsButton.current?.focus();
           }}>
-          {mobile && <div className="panel-heading"><h2>Settings</h2>
-            <button onClick={() => setSettingsOpen(false)}>Close</button></div>}
-          <section>
-            <h2>Tool</h2>
-            <div className="actions">
-              <button title="Pen (B)" aria-keyshortcuts="B" disabled={viewGesture} aria-pressed={!hand && tool === 'pen'} onClick={() => { setHand(false); setTool('pen'); }}>Pen</button>
-              <button title="Eraser (E)" aria-keyshortcuts="E" disabled={viewGesture} aria-pressed={!hand && tool === 'eraser'} onClick={() => { setHand(false); setTool('eraser'); }}>Eraser</button>
-            </div>
+          <div className="panel-heading"><div><p className="eyebrow">MAKE IT YOURS</p><h2>Brush studio</h2></div>
+            {mobile ? <button className="icon-button" aria-label="Close settings" onClick={() => setSettingsOpen(false)}><Icon name="close" /></button> : <Icon name="settings" />}</div>
+          <section className="brush-section">
             {tool === 'eraser' && <p>Touch a stroke to erase it. Undo restores the whole gesture.</p>}
             {tool === 'pen' && <>
-            <h2>Brush</h2>
-            <div className="actions" role="group" aria-label="Brush preset">
+            <h3 className="section-label">Brush type</h3>
+            <div className="segmented-control" role="group" aria-label="Brush preset">
               <button aria-pressed={brushMode === 'pen'} onClick={() => {
                 setBrushMode('pen'); setColor(palette[0]); setSize(6); setVelocityWidth(true);
-              }}>Ink</button>
+              }}><Icon name="pen" />Ink</button>
               <button aria-pressed={brushMode === 'highlighter'} onClick={() => {
                 setBrushMode('highlighter'); setColor('#eab308'); setSize(24); setVelocityWidth(false);
-              }}>Highlighter</button>
+              }}><span className="marker-icon" aria-hidden="true" />Marker</button>
+            </div>
+            <div className="brush-preview" aria-label="Brush color and width preview">
+              <svg viewBox="0 0 240 60" aria-hidden="true"><path d="M18 41C50 41 38 15 75 18S102 48 130 32 167 14 186 24 212 35 222 21" fill="none" stroke={color} strokeWidth={Math.min(size, 28)} strokeLinecap="round" opacity={brushMode === 'highlighter' ? 0.4 : 1} /></svg>
             </div>
             <p className="setting-note">{brushMode === 'highlighter' ? '40% opacity. Separate strokes build up color.' : 'Opaque ink. Adjust width response below.'}</p>
-            <label>Custom color <input type="color" value={color} onChange={event => setColor(event.currentTarget.value)} /></label>
+            <div className="color-heading"><h3 className="section-label">Ink color</h3><label className="custom-color" title="Choose custom color"><span>{color.toUpperCase()}</span><input aria-label="Custom color" type="color" value={color} onChange={event => setColor(event.currentTarget.value)} /></label></div>
             <div className="swatches" role="group" aria-label="Brush color">
               {palette.map(value => <button key={value} className="swatch" style={{ background: value }}
-                aria-label={'Color ' + value} aria-pressed={color === value} onClick={() => setColor(value)} />)}
+                aria-label={'Color ' + value} aria-pressed={color === value} onClick={() => setColor(value)}>{color === value && <Icon name="check" width="15" height="15" />}</button>)}
             </div>
             <label>Size <output>{size} px</output><input type="range" min="1" max="48" value={size}
               onChange={event => setSize(Number(event.currentTarget.value))} /></label>
@@ -431,8 +463,8 @@ function App() {
               onChange={event => setVelocityWidth(event.currentTarget.checked)} /> Speed-sensitive width</label>
             </>}
           </section>
-          <section>
-            <h2>Export settings</h2>
+          <details className="setting-group">
+            <summary>Export settings<Icon name="chevron" /></summary>
             <label><input type="checkbox" checked={cropExport}
               onChange={event => setCropExport(event.currentTarget.checked)} /> Crop to drawing</label>
             <label>Padding <output>{exportPadding} px</output>
@@ -446,9 +478,9 @@ function App() {
                 {[1, 2, 4].map(scale => <option key={scale} value={scale}>{scale}×</option>)}
               </select>
             </label>
-          </section>
-          <section>
-            <h2>Replay</h2>
+          </details>
+          <details className="setting-group">
+            <summary>Replay<Icon name="chevron" /></summary>
             <label>Speed
               <select value={replaySpeed} disabled={replayState !== 'idle'}
                 onChange={event => setReplaySpeed(Number(event.currentTarget.value))}>
@@ -462,9 +494,9 @@ function App() {
               <button disabled={replayState !== 'paused'} onClick={() => engine.current?.resumeReplay()}>Resume</button>
               <button disabled={replayState === 'idle'} onClick={() => engine.current?.stopReplay()}>Stop</button>
             </div>
-          </section>
-          <section>
-            <h2>Paper</h2>
+          </details>
+          <details className="setting-group">
+            <summary>Canvas<Icon name="chevron" /></summary>
             <label>Paper color
               <select value={preferences.paperColor} onChange={event => {
                 const paperColor = event.currentTarget.value as typeof preferences.paperColor;
@@ -478,16 +510,16 @@ function App() {
               <button aria-pressed={paper === 'plain'} onClick={() => setPreferences(value => ({ ...value, guides: 'plain' }))}>Plain</button>
               <button aria-pressed={paper === 'dots'} onClick={() => setPreferences(value => ({ ...value, guides: 'dots' }))}>Dot grid</button>
             </div>
-          </section>
-          <section>
-            <h2>Appearance</h2>
+          </details>
+          <details className="setting-group">
+            <summary>Appearance<Icon name="chevron" /></summary>
             <div className="actions" role="group" aria-label="Interface theme">
               <button aria-pressed={preferences.theme === 'light'} onClick={() => setPreferences(value => ({ ...value, theme: 'light' }))}>Light</button>
               <button aria-pressed={preferences.theme === 'dark'} onClick={() => setPreferences(value => ({ ...value, theme: 'dark' }))}>Dark</button>
             </div>
             <p className="setting-note">Appearance is saved on this device and shared across drawings. Thumbnails use warm paper.</p>
             <p role="status">{preferenceMessage}</p>
-          </section>
+          </details>
         </dialog>
       </main>
       </div>
@@ -495,9 +527,9 @@ function App() {
         onCancel={event => { if (changingDrawing.current) event.preventDefault(); else setLibraryOpen(false); }}
         onClose={() => { setLibraryOpen(false); libraryButton.current?.focus(); }}>
         <div className="panel-heading"><h2 id="library-title">Your drawings</h2>
-          <button disabled={!ready} onClick={() => setLibraryOpen(false)}>Close</button></div>
+          <button className="icon-button" aria-label="Close drawings" disabled={!ready} onClick={() => setLibraryOpen(false)}><Icon name="close" /></button></div>
         <p>Saved on this device. Export JSON to keep a backup.</p>
-        <button className="primary" disabled={!ready} onClick={() => void changeDrawing('create')}>New drawing</button>
+        <button className="primary" disabled={!ready} onClick={() => void changeDrawing('create')}><Icon name="plus" />New drawing</button>
         <ul className="drawing-list">
           {drawings.map(drawing => <li key={drawing.id}>
             <button disabled={!ready || drawing.id === activeDrawing?.id}
@@ -530,7 +562,7 @@ function App() {
         <p role="status">{libraryMessage}</p>
       </dialog>
       {labOpen && <StrokeLab onClose={() => setLabOpen(false)} />}
-      <p className="save-status" role="status">{saveStatus}</p>
+      <footer className="app-footer"><p className="save-status" role="status"><span className="status-dot" />{saveStatus}</p><span className="footer-note">A little space to create.</span></footer>
     </>
   );
 }

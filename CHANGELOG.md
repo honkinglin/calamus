@@ -27,6 +27,8 @@ No published releases yet. Package version 0.1.0 is a development version.
 
 ### Playground and examples
 
+- Tailwind-based studio interface with a compact icon toolbar, document header, export menu, brush preview, collapsible controls and coordinated light/dark styling. Browser visual acceptance remains pending.
+
 - Local drawing library, recoverable deletion, zoom/pan, themes and brush presets.
 - Stroke parameter lab and reproducible performance reports.
 - Plain JavaScript example with export and engine lifecycle controls.
