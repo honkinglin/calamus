@@ -19,5 +19,15 @@
   "devDependencies": {
     "vite": "7.3.8"
   },
-  "types": "./dist/index.d.ts"
+  "types": "./dist/index.d.ts",
+  "description": "Dependency-free TypeScript Canvas drawing SDK with smoothing, pressure, history, replay and exports.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/honkinglin/calamus.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/honkinglin/calamus#readme",
+  "bugs": {
+    "url": "https://github.com/honkinglin/calamus/issues"
+  }
 }
