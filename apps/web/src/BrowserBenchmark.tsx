@@ -37,16 +37,18 @@ export function BrowserBenchmark() {
   }
   return <section className="browser-benchmark" aria-label="Browser performance">
     <h2>Browser performance</h2>
-    <p>Fixed full redraws on a separate canvas. Measures command submission and animation-frame intervals, not input latency or guaranteed FPS. Opaque batches also tests 10,000 points; the single-path reference is capped at 2,000 points per stroke.</p>
-    <label>Renderer <select disabled={running} value={renderer} onChange={event => setRenderer(event.currentTarget.value as typeof renderer)}>
+    <p className="benchmark-description">Fixed full redraws on a separate canvas. Measures command submission and animation-frame intervals, not input latency or guaranteed FPS. Opaque batches also tests 10,000 points; the single-path reference is capped at 2,000 points per stroke.</p>
+    <div className="benchmark-controls">
+    <label className="benchmark-renderer">Renderer <select disabled={running} value={renderer} onChange={event => setRenderer(event.currentTarget.value as typeof renderer)}>
       <option value="optimized">Opaque batches</option><option value="reference">Single-path reference</option>
     </select></label>
-    <div className="actions">
-      <button disabled={running} onClick={() => void run()}>Run browser benchmark</button>
+    <div className="benchmark-actions">
+      <button className="primary" disabled={running} onClick={() => void run()}>Run browser benchmark</button>
       <button disabled={!running} onClick={() => task.current?.abort()}>Cancel benchmark</button>
       <button disabled={!report || running} onClick={download}>Download benchmark JSON</button>
     </div>
-    <p role="status">{message}</p>
+    </div>
+    <p className="benchmark-status" role="status">{message}</p>
     <canvas ref={canvas} className="benchmark-canvas" aria-label="Benchmark render preview" />
     {report && <>
       <div className="benchmark-table"><table><caption>{report.renderer} · 30 frames after 5 warm-up frames · milliseconds</caption>

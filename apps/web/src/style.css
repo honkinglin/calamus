@@ -225,7 +225,21 @@ body:has(.stroke-lab:modal) { overflow: hidden; }
   .lab-body { padding: 16px; }
 }
 .browser-benchmark { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--color-border); }
-.benchmark-canvas { width: min(100%, 420px); background: #fffdf7; cursor: default; pointer-events: none; }
+.benchmark-description { margin-top: 8px; max-width: 80ch; color: var(--color-muted); font-size: 13px; line-height: 1.65; }
+.benchmark-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 20px; margin-top: 20px; padding: 16px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-workspace); }
+.benchmark-renderer { display: grid; gap: 8px; margin: 0; min-width: 0; }
+.benchmark-renderer select { margin: 0; min-height: 36px; width: 210px; max-width: 100%; }
+.benchmark-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.benchmark-actions button { min-height: 36px; }
+.benchmark-status { margin-block: 12px; color: var(--color-muted); font-size: 13px; }
+.benchmark-status:empty { margin-block: 16px; }
+@media (max-width: 600px) {
+  .benchmark-controls { align-items: stretch; gap: 16px; }
+  .benchmark-renderer, .benchmark-actions, .benchmark-renderer select { width: 100%; }
+  .benchmark-actions { flex-direction: column; }
+  .benchmark-actions button { width: 100%; }
+}
+.benchmark-canvas { display: block; border: 1px solid var(--color-border); border-radius: 12px; width: min(100%, 420px); background: #fffdf7; cursor: default; pointer-events: none; }
 .benchmark-table { overflow-x: auto; margin-top: 16px; }
 .benchmark-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .benchmark-table th, .benchmark-table td { text-align: left; padding: 10px; border-bottom: 1px solid var(--color-border); }
@@ -236,7 +250,7 @@ body:has(.stroke-lab:modal) { overflow: hidden; }
 .lab-preview { padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; }
 .lab-preview figcaption { font-size: 12px; }
 .lab-controls { padding: 0 0 8px; }
-.browser-benchmark h3 { font-weight: 600; margin-bottom: 12px; }
+
 @media (pointer: coarse) {
   button, summary, .view-controls button { min-height: 44px; }
   .tool-dock button { width: 38px; }
