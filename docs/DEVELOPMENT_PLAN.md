@@ -256,10 +256,11 @@ board.destroy();
 
 ### P7 — 发布与展示
 
-- [ ] 确定用户 GitHub 仓库、npm 发布身份和网站托管目标。
+- [x] GitHub 仓库 honkinglin/calamus 与 Vercel calamus 项目已确认并连接。
+- [ ] 确认 npm 发布身份。
 - [ ] 完成最终版本检查，创建公开仓库或推送到指定仓库。
 - [ ] 发布 npm 版本并从 registry 安装验证。
-- [ ] 部署网站，验证实际生产地址的绘制、保存和导出。
+- [x] Vercel production READY；正式地址首页 200，浏览器绘制、保存、刷新恢复和 JSON 导出验证通过。
 - [ ] 创建 release，填写网站、npm、源码链接与已知限制。
 - [ ] 更新仓库 About、topics 和 README 展示素材。
 

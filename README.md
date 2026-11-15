@@ -12,7 +12,7 @@ A canvas drawing playground and a dependency-free TypeScript drawing SDK.
 - A React playground with local drawing storage, recoverable deletion, zoom/pan, themes and a stroke parameter lab.
 - An ESM SDK with declarations, no runtime dependencies, and a [plain JavaScript example](examples/vanilla/README.md).
 
-The project is in development. The package name is provisional and publishing is disabled with `private: true`. No public npm release or hosted deployment is claimed. A standalone UMD build is available through the `@calamus/core/umd` subpath or a classic script tag; the root entry remains ESM. Worker flood fill is not implemented. Package identity and license selection remain release tasks.
+The project is in development. The package name is provisional and publishing is disabled with `private: true`. The playground is deployed at [calamus-five.vercel.app](https://calamus-five.vercel.app/). No public npm release is claimed. A standalone UMD build is available through the `@calamus/core/umd` subpath or a classic script tag; the root entry remains ESM. Worker flood fill is not implemented. Package identity and license selection remain release tasks.
 
 ## Run locally
 
