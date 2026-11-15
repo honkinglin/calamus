@@ -14,6 +14,8 @@ No published releases yet. Package version 0.1.0 is a development version.
 
 ### Fixed
 
+- Corrected the Calamus wordmark and centered Stroke lab in the viewport, with a persistent icon close button, scrollable content, and reduced-motion-aware enter/exit transitions.
+
 - Live drawing now enforces document stroke/point capacity and reports rejected gestures via `onInputLimit`. Existing drawings and history survive overflow; erasing remains available and retains only its latest sweep endpoint. Playground and vanilla example show capacity feedback.
 
 - Invalid pointer samples and zero-sized canvas bounds no longer enter committed strokes. Invalid in-progress input cancels the gesture (including provisional erasures); regressing event timestamps are normalized to preserve document ordering.

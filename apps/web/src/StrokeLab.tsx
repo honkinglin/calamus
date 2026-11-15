@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createStrokeGeometry, processStroke } from '@calamus/core';
 import type { Point, Stroke } from '@calamus/core';
+import { Icon } from './Icon';
 import { BrowserBenchmark } from './BrowserBenchmark';
 import { makeLabSample } from './lab-samples';
 import type { SampleKind } from './lab-samples';
@@ -33,6 +34,7 @@ function LabPreview({ title, points, smoothing, radius, showRaw, showGuide }: {
 
 export function StrokeLab({ onClose }: { onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const [closing, setClosing] = useState(false);
   const [sample, setSample] = useState<SampleKind>('wave');
   const [smoothing, setSmoothing] = useState(0.55);
   const [radius, setRadius] = useState(16);
@@ -45,8 +47,19 @@ export function StrokeLab({ onClose }: { onClose: () => void }) {
     element.showModal();
     return () => element.close();
   }, []);
-  return <dialog ref={dialog} className="stroke-lab" aria-labelledby="lab-title" onCancel={onClose}>
-    <div className="panel-heading"><h2 id="lab-title">Stroke lab</h2><button onClick={onClose} autoFocus>Close lab</button></div>
+  useEffect(() => {
+    if (!closing) return;
+    const timer = window.setTimeout(onClose, 160);
+    return () => window.clearTimeout(timer);
+  }, [closing, onClose]);
+  function requestClose() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) onClose();
+    else setClosing(true);
+  }
+  return <dialog ref={dialog} className="stroke-lab" data-closing={closing || undefined} aria-labelledby="lab-title"
+    onCancel={event => { event.preventDefault(); requestClose(); }}>
+    <div className="panel-heading"><h2 id="lab-title">Stroke lab</h2><button className="icon-button lab-close" aria-label="Close stroke lab" title="Close stroke lab (Esc)" onClick={requestClose} autoFocus><Icon name="close" /></button></div>
+    <div className="lab-body">
     <p>Compare the same fixed sample. Experiments never change your drawing or exports.</p>
     <div className="lab-controls">
       <label>Sample <select value={sample} onChange={event => setSample(event.currentTarget.value as SampleKind)}>
@@ -66,5 +79,6 @@ export function StrokeLab({ onClose }: { onClose: () => void }) {
     </div>
     <p className="setting-note">Dashed red: raw input. White marker: processed tip. Purple circle: configured maximum radius; the engine ramps up its effective radius at the start. Pressure ramp uses synthetic pressure, not a device measurement. Offset is geometric distance, not latency.</p>
     <BrowserBenchmark />
+    </div>
   </dialog>;
 }

@@ -339,7 +339,7 @@ function App() {
       <div inert={!ready}>
       <header className="app-header">
         <div className="flex min-w-0 items-center gap-5">
-          <a className="brand" href="./" aria-label="Calamus home"><span className="brand-mark"><Icon name="pen" /></span><span>calamus<span className="brand-dot">.</span></span></a>
+          <a className="brand" href="./" aria-label="Calamus home"><span className="brand-mark"><Icon name="pen" /></span><span>Calamus</span></a>
           <span className="header-divider" aria-hidden="true" />
           <button aria-label={`Drawings: ${activeDrawing?.name ?? 'Untitled drawing'}`} className="document-switch" ref={libraryButton} disabled={!activeDrawing} aria-haspopup="dialog"
             onClick={() => { setDrawingName(activeDrawing?.name ?? ''); setDrawings(library.current?.list() ?? []); setTrash(library.current?.trash() ?? []); setLibraryMessage(''); setLibraryOpen(true); }}>
