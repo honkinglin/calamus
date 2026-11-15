@@ -4,6 +4,10 @@ No published releases yet. Package version 0.1.0 is a development version.
 
 ## Unreleased
 
+### Web
+
+- PNG, SVG and JSON downloads use the current drawing name with portable filename sanitization, Unicode support and a bounded UTF-8 length. PNG captures the name before asynchronous rendering.
+
 ### SDK
 
 - TypeScript Canvas 2D engine with adaptive smoothing, radius following, pressure and velocity width.

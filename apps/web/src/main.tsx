@@ -1,3 +1,4 @@
+import { exportFilename } from './export-filename';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Calamus, parseDocument } from '@calamus/core';
@@ -299,7 +300,7 @@ function App() {
       try {
         const link = document.createElement('a');
         link.href = url;
-        link.download = `calamus.${format.toLowerCase()}`;
+        link.download = exportFilename(activeDrawing?.name, format === 'SVG' ? 'svg' : 'json');
         link.click();
       } finally {
         setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -312,6 +313,7 @@ function App() {
 
   async function exportImage() {
     if (!engine.current || exporting) return;
+    const filename = exportFilename(activeDrawing?.name, 'png');
     setExporting(true);
     try {
       const blob = await engine.current.exportPNG({
@@ -322,7 +324,7 @@ function App() {
       });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.download = 'calamus.png';
+      link.download = filename;
       link.href = url;
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
