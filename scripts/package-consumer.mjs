@@ -50,7 +50,21 @@ try {
     const vendor = join(root, 'examples/vanilla/vendor');
     await rm(vendor, { recursive: true, force: true });
     await cp(join(installed, 'dist'), vendor, { recursive: true });
-    console.log('Prepared vanilla example using the verified installed tarball.');
+    // Serve a .js extension so static hosts send the classic bundle as JavaScript.
+    await cp(join(installed, 'dist/calamus.umd.cjs'), join(vendor, 'calamus.umd.js'));
+    const exampleSource = await readFile(join(root, 'examples/vanilla/app.js'), 'utf8');
+    assert.ok(exampleSource.startsWith("import { Calamus } from '@calamus/core';"));
+    await writeFile(join(vendor, 'umd-app.js'), exampleSource.replace(
+      "import { Calamus } from '@calamus/core';", 'const { Calamus } = window.CalamusSDK;'));
+    const examplePage = await readFile(join(root, 'examples/vanilla/index.html'), 'utf8');
+    await writeFile(join(vendor, 'umd.html'), examplePage
+      .replace('Calamus · Vanilla JavaScript', 'Calamus · Classic script')
+      .replace('./style.css', '../style.css')
+      .replace(/  <script type="importmap">.*?<\/script>\n/, '')
+      .replace('<script type="module" src="./app.js"></script>',
+        '<script defer src="./calamus.umd.js"></script>\n  <script defer src="./umd-app.js"></script>')
+      .replace('Plain JavaScript. One canvas.', 'Classic scripts. No module loader. One canvas.'));
+    console.log('Prepared ESM and classic-script UMD examples from the verified installed tarball.');
   }
   console.log('Packed declarations passed strict NodeNext and Bundler consumer checks. No runtime dependencies.');
 } finally {
