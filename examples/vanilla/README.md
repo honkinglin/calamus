@@ -29,7 +29,7 @@ pnpm example:vanilla
 
 ## 已验证范围
 
-实际 tarball 的 ESM 消费、示例 JavaScript 的严格类型检查和静态构建已通过。浏览器绘制、下载、焦点及响应布局验收仍待补；目前不声称已完成这些检查。
+实际 tarball 的 ESM 消费、示例 JavaScript 的严格类型检查和静态构建已通过。2026-11-14 完成桌面应用内浏览器绘制、撤销/重做、PNG/SVG/JSON 下载、销毁/重建及 390px 窄屏布局与继续绘制验收。下载 JSON 确认原笔画完整保留；PNG 尺寸、CRC 和解压检查及 SVG XML/viewBox/path 检查通过。真实触控设备、其他浏览器和完整键盘焦点流程仍待补。详见 ../../docs/SDK_BROWSER_ACCEPTANCE.md。
 
 ## 经典 script / UMD 示例
 
