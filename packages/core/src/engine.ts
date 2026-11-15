@@ -1,7 +1,8 @@
+import { ActiveStrokePath } from './active-path.js';
 import { ActiveStrokeRaster } from './active-raster.js';
 import { StrokeProcessor } from './stroke.js';
 import type { RenderPoint } from './stroke.js';
-import { drawProcessedStroke, drawGeometry } from './render.js';
+import { drawProcessedStroke, drawGeometry, canBatchOpaque } from './render.js';
 import { StrokeGeometryCache } from './geometry.js';
 import { exportBounds } from './bounds.js';
 import type { CropOptions } from './bounds.js';
@@ -50,7 +51,7 @@ export class Calamus {
   private committedDirty = true;
   private resolutionQuery?: MediaQueryList;
   private brush: Brush;
-  private active: { id: number; start: number; stroke: Stroke; processor: StrokeProcessor; processed: RenderPoint[]; geometry: StrokeGeometryCache; raster: ActiveStrokeRaster } | null = null;
+  private active: { id: number; start: number; stroke: Stroke; processor: StrokeProcessor; processed: RenderPoint[]; geometry: StrokeGeometryCache; raster: ActiveStrokeRaster; path: ActiveStrokePath } | null = null;
   private observer: ResizeObserver;
   private controller = new AbortController();
   private frame = 0;
@@ -305,7 +306,7 @@ export class Calamus {
     this.active = {
       id: event.pointerId, start: event.timeStamp,
       stroke: { brush, points: [point] }, processor,
-      processed, geometry, raster: new ActiveStrokeRaster(() => this.canvas.ownerDocument.createElement('canvas')),
+      processed, geometry, path: new ActiveStrokePath(), raster: new ActiveStrokeRaster(() => this.canvas.ownerDocument.createElement('canvas')),
     };
     if (this.tool === 'eraser') this.eraseAt(this.active.stroke.points[0]);
     this.schedule();
@@ -350,6 +351,7 @@ export class Calamus {
       stroke.points.push({ ...end, pressure: last.pressure });
     }
     this.active?.raster.dispose();
+    this.active?.path.dispose();
     this.active = null;
     if (this.tool === 'eraser') {
       this.eraseAt(end, last);
@@ -373,6 +375,7 @@ export class Calamus {
     }
     const id = this.active?.id;
     this.active?.raster.dispose();
+    this.active?.path.dispose();
     this.active = null;
     if (id !== undefined && this.canvas.hasPointerCapture(id)) this.canvas.releasePointerCapture(id);
     this.schedule();
@@ -433,10 +436,11 @@ export class Calamus {
       const color = this.active.stroke.brush.color;
       if (geometry) {
         if (!this.active.raster.draw(ctx, color, geometry, this.canvas.width, this.canvas.height, this.width, this.height)) {
-          drawGeometry(ctx, color, geometry);
+          if (canBatchOpaque(ctx, color) || !this.active.path.draw(ctx, color, geometry)) drawGeometry(ctx, color, geometry);
         }
       } else {
         this.active.raster.dispose();
+        this.active.path.dispose();
         drawProcessedStroke(ctx, color, this.active.processed);
       }
     }

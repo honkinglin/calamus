@@ -10,6 +10,8 @@ No published releases yet. Package version 0.1.0 is a development version.
 
 ### SDK
 
+- Active translucent strokes reuse a bounded incremental Path2D while retaining one nonzero fill per frame; unsupported environments and oversized geometry fall back to the existing renderer. Browser pixel/performance acceptance remains pending.
+
 - TypeScript Canvas 2D engine with adaptive smoothing, radius following, pressure and velocity width.
 - Whole-stroke erasing, undo/redo, replay, and PNG/SVG/JSON export.
 - Versioned JSON validation and content-cropped image export.
