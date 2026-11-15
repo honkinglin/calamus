@@ -14,6 +14,8 @@ No published releases yet. Package version 0.1.0 is a development version.
 
 ### Fixed
 
+- The vanilla and classic-script examples preserve explicitly destroyed instances across back/forward cache restores; only instances active before navigation resume automatically.
+
 - Corrected the Calamus wordmark and centered Stroke lab in the viewport, with a persistent icon close button, scrollable content, and reduced-motion-aware enter/exit transitions.
 
 - Live drawing now enforces document stroke/point capacity and reports rejected gestures via `onInputLimit`. Existing drawings and history survive overflow; erasing remains available and retains only its latest sweep endpoint. Playground and vanilla example show capacity feedback.

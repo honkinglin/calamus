@@ -12,6 +12,7 @@ const button = id => /** @type {HTMLButtonElement} */ (document.getElementById(i
 let engine = null;
 let exporting = false;
 let snapshot = '';
+let resumeOnPageShow = false;
 
 function sync() {
   const state = engine?.state;
@@ -69,7 +70,11 @@ button('lifecycle').addEventListener('click', () => {
   } else mount();
 });
 window.addEventListener('pagehide', () => {
+  resumeOnPageShow = engine !== null;
   if (engine) { snapshot = engine.exportJSON(); engine.destroy(); engine = null; }
 });
-window.addEventListener('pageshow', event => { if (event.persisted && !engine) mount(); });
+window.addEventListener('pageshow', event => {
+  if (event.persisted && resumeOnPageShow && !engine) mount();
+  resumeOnPageShow = false;
+});
 mount();

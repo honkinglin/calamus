@@ -8,7 +8,7 @@
     "dev": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web dev",
     "build": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web build",
     "check": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web check",
-    "test": "pnpm --filter @calamus/core build && node --test packages/core/test/*.test.mjs && node --experimental-strip-types --test apps/web/test/*.test.mjs",
+    "test": "pnpm --filter @calamus/core build && node --test packages/core/test/*.test.mjs && node --experimental-strip-types --test apps/web/test/*.test.mjs && node --test examples/vanilla/test/*.test.mjs",
     "bench": "pnpm --filter @calamus/core build && node --expose-gc packages/core/bench/stroke.mjs",
     "size": "pnpm --filter @calamus/core build && node scripts/package-size.mjs",
     "bench:eraser": "pnpm --filter @calamus/core build && node packages/core/bench/eraser.mjs",
