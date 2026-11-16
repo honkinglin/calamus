@@ -22,8 +22,9 @@ run.onclick = async () => {
       const path = new ActiveStrokePath();
       try {
         const geometry = createStrokeGeometry({ brush: {color:'#254e4366',size:12,smoothing:0.55,velocityWidth:false},
-          points: Array.from({length:2000}, (_, i) => ({x:500+Math.sin(i/40)*400,y:350+Math.sin(i/23)*280,time:i*4,pressure:null})) });
-        for (const count of [1, 100, 500, 1000, 2000]) {
+          points: Array.from({length:2049}, (_, i) => ({x:500+Math.sin(i/40)*400,y:350+Math.sin(i/23)*280,time:i*4,pressure:null})) });
+        let previousCount = 0;
+        for (const count of [1, 100, 500, 1000, 2000, 2001, 2017, 2049]) {
           if (document.hidden) throw new Error('Keep this tab visible.');
           status.textContent = `Comparing ${count} points at scale ${scale}…`; await yieldFrame();
           const prefix = geometry.slice(0, count * 2 - 1);
@@ -58,13 +59,14 @@ run.onclick = async () => {
           const readbackMs=performance.now()-readStart;
           let changedPixels=0,maxChannelDelta=0;
           for(let i=0;i<actual.length;i+=4){let changed=false;for(let c=0;c<4;c++){const delta=Math.abs(actual[i+c]-expected[i+c]);changed ||= delta!==0;maxChannelDelta=Math.max(maxChannelDelta,delta);}if(changed)changedPixels++;}
-          rows.push({scale,points:count,usedCache,changedPixels,maxChannelDelta,appendSubmitMs,cachedSubmitMs:summary(cachedSamplesMs),referenceSubmitMs:summary(referenceSamplesMs),cachedSamplesMs,referenceSamplesMs,readbackMs});
+          rows.push({scale,points:count,addedPoints:count-previousCount,scenario:count>2000?'small-increment':'bulk-growth',usedCache,changedPixels,maxChannelDelta,appendSubmitMs,cachedSubmitMs:summary(cachedSamplesMs),referenceSubmitMs:summary(referenceSamplesMs),cachedSamplesMs,referenceSamplesMs,readbackMs});
+          previousCount = count;
           preview.getContext('2d')!.clearRect(0,0,1000,700);preview.getContext('2d')!.drawImage(a,0,0,1000,700);
         }
       } finally {path.dispose(); a.width=b.width=0; a.height=b.height=0;}
     }
-    report=JSON.stringify({schemaVersion:2,warmupPairs:2,measuredPairs:10,recordedAt:new Date().toISOString(),userAgent:navigator.userAgent,rows,
-      notes:'Single growing gesture. Append timing separated from 10 warmed redraw pairs after 2 warmup pairs; order alternates. Redraw timings are not incremental drawing latency. Diagnostic timings only; no speedup claim. Readback is outside submit timings. Scales are explicit backing-store scales, not a device DPR change. Native path memory not measured.'},null,2);
+    report=JSON.stringify({schemaVersion:3,warmupPairs:2,measuredPairs:10,recordedAt:new Date().toISOString(),userAgent:navigator.userAgent,rows,
+      notes:'Single growing gesture with bulk growth followed by +1/+16/+32 point increments after 2000 points. Geometry is precomputed and excluded. Append timing separated from 10 warmed redraw pairs after 2 warmup pairs; order alternates. Redraw timings are not incremental drawing latency. Diagnostic timings only; no speedup claim. Readback is outside submit timings. Scales are explicit backing-store scales, not a device DPR change. Native path memory not measured.'},null,2);
     output.textContent=report;download.disabled=false;
     status.textContent=rows.every(row=>row.changedPixels===0)?'Passed: all pixel comparisons match.':'Pixel differences detected; inspect report.';
   } catch(error){status.textContent=error instanceof Error?error.message:String(error);} finally{run.disabled=false;}

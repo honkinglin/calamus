@@ -1,0 +1,698 @@
+{
+  "schemaVersion": 3,
+  "warmupPairs": 2,
+  "measuredPairs": 10,
+  "recordedAt": "2026-11-16T03:13:52.815Z",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+  "rows": [
+    {
+      "scale": 1,
+      "points": 1,
+      "addedPoints": 1,
+      "scenario": "bulk-growth",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 0.10000000149011612,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "referenceSubmitMs": {
+        "median": 0,
+        "p95": 0.09999999776482582
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0.09999999776482582,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "readbackMs": 5.300000000745058
+    },
+    {
+      "scale": 1,
+      "points": 100,
+      "addedPoints": 99,
+      "scenario": "bulk-growth",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 0.5999999977648258,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "referenceSubmitMs": {
+        "median": 0.4000000022351742,
+        "p95": 0.5999999977648258
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        0.5999999977648258,
+        0.5999999977648258,
+        0.4000000022351742,
+        0.3999999985098839,
+        0.5,
+        0.4000000022351742,
+        0.30000000074505806,
+        0.30000000074505806,
+        0.4000000022351742,
+        0.29999999701976776
+      ],
+      "readbackMs": 24.100000001490116
+    },
+    {
+      "scale": 1,
+      "points": 500,
+      "addedPoints": 400,
+      "scenario": "bulk-growth",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 6.899999998509884,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "referenceSubmitMs": {
+        "median": 6.650000000372529,
+        "p95": 6.800000000745058
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        6.699999999254942,
+        6.5,
+        6.699999999254942,
+        6.600000001490116,
+        6.800000000745058,
+        6.699999999254942,
+        6.600000001490116,
+        6.600000001490116,
+        6.699999999254942,
+        6.599999997764826
+      ],
+      "readbackMs": 3.600000001490116
+    },
+    {
+      "scale": 1,
+      "points": 1000,
+      "addedPoints": 500,
+      "scenario": "bulk-growth",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 19.699999999254942,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "referenceSubmitMs": {
+        "median": 26.100000001490116,
+        "p95": 26.199999999254942
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        26.099999997764826,
+        26.100000001490116,
+        26.099999997764826,
+        26.199999999254942,
+        26.199999999254942,
+        26.099999997764826,
+        26.100000001490116,
+        26.100000001490116,
+        26.100000001490116,
+        26.199999999254942
+      ],
+      "readbackMs": 6.600000001490116
+    },
+    {
+      "scale": 1,
+      "points": 2000,
+      "addedPoints": 1000,
+      "scenario": "bulk-growth",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 78.70000000298023,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "referenceSubmitMs": {
+        "median": 104.30000000074506,
+        "p95": 105.19999999925494
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        104,
+        104.19999999925494,
+        104.30000000074506,
+        104.30000000074506,
+        104.19999999925494,
+        104.30000000074506,
+        104.30000000074506,
+        105.19999999925494,
+        104.39999999850988,
+        104.40000000223517
+      ],
+      "readbackMs": 12.599999997764826
+    },
+    {
+      "scale": 1,
+      "points": 2001,
+      "addedPoints": 1,
+      "scenario": "small-increment",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 0.19999999925494194,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "referenceSubmitMs": {
+        "median": 104.30000000074506,
+        "p95": 105.19999999925494
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        104.19999999925494,
+        104.70000000298023,
+        104.40000000223517,
+        104.30000000074506,
+        104,
+        104.20000000298023,
+        105.19999999925494,
+        104.30000000074506,
+        104.30000000074506,
+        104.09999999776483
+      ],
+      "readbackMs": 12.600000001490116
+    },
+    {
+      "scale": 1,
+      "points": 2017,
+      "addedPoints": 16,
+      "scenario": "small-increment",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 2,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "referenceSubmitMs": {
+        "median": 105.75000000186265,
+        "p95": 109.10000000149012
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        109.10000000149012,
+        105.60000000149012,
+        105.69999999925494,
+        105.90000000223517,
+        105.69999999925494,
+        105.70000000298023,
+        105.69999999925494,
+        106.10000000149012,
+        105.80000000074506,
+        106.5
+      ],
+      "readbackMs": 13.800000000745058
+    },
+    {
+      "scale": 1,
+      "points": 2049,
+      "addedPoints": 32,
+      "scenario": "small-increment",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 3.699999999254942,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0.10000000149011612
+      },
+      "referenceSubmitMs": {
+        "median": 109.55000000074506,
+        "p95": 110.39999999850988
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0.10000000149011612,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        109.80000000074506,
+        109.30000000074506,
+        109.5,
+        109.69999999925494,
+        109.5,
+        110.19999999925494,
+        109.60000000149012,
+        109.5,
+        110.39999999850988,
+        109.40000000223517
+      ],
+      "readbackMs": 14.5
+    },
+    {
+      "scale": 2,
+      "points": 1,
+      "addedPoints": 1,
+      "scenario": "bulk-growth",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 0,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "referenceSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "readbackMs": 14
+    },
+    {
+      "scale": 2,
+      "points": 100,
+      "addedPoints": 99,
+      "scenario": "bulk-growth",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 0.30000000074505806,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "referenceSubmitMs": {
+        "median": 0.4500000011175871,
+        "p95": 0.6000000014901161
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        0.30000000074505806,
+        0.5,
+        0.3999999985098839,
+        0.4000000022351742,
+        0.3999999985098839,
+        0.6000000014901161,
+        0.3999999985098839,
+        0.5,
+        0.5999999977648258,
+        0.6000000014901161
+      ],
+      "readbackMs": 20.5
+    },
+    {
+      "scale": 2,
+      "points": 500,
+      "addedPoints": 400,
+      "scenario": "bulk-growth",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 7.099999997764826,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "referenceSubmitMs": {
+        "median": 6.599999999627471,
+        "p95": 6.800000000745058
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        6.600000001490116,
+        6.5,
+        6.5,
+        6.599999997764826,
+        6.700000002980232,
+        6.5,
+        6.600000001490116,
+        6.800000000745058,
+        6.600000001490116,
+        6.5
+      ],
+      "readbackMs": 8.399999998509884
+    },
+    {
+      "scale": 2,
+      "points": 1000,
+      "addedPoints": 500,
+      "scenario": "bulk-growth",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 19.899999998509884,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "referenceSubmitMs": {
+        "median": 26.199999999254942,
+        "p95": 26.399999998509884
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        26,
+        26.199999999254942,
+        26.300000000745058,
+        26.199999999254942,
+        26.399999998509884,
+        26.300000000745058,
+        26.100000001490116,
+        26.200000002980232,
+        26.199999999254942,
+        26.199999999254942
+      ],
+      "readbackMs": 13
+    },
+    {
+      "scale": 2,
+      "points": 2000,
+      "addedPoints": 1000,
+      "scenario": "bulk-growth",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 78.39999999850988,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "referenceSubmitMs": {
+        "median": 104.10000000149012,
+        "p95": 105.19999999925494
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        104,
+        105.19999999925494,
+        104.10000000149012,
+        104.09999999776483,
+        104.19999999925494,
+        104,
+        104.19999999925494,
+        104.09999999776483,
+        104.5,
+        104.10000000149012
+      ],
+      "readbackMs": 21.599999997764826
+    },
+    {
+      "scale": 2,
+      "points": 2001,
+      "addedPoints": 1,
+      "scenario": "small-increment",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 0.19999999925494194,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "referenceSubmitMs": {
+        "median": 104.59999999962747,
+        "p95": 105.10000000149012
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        105.10000000149012,
+        104.5,
+        104.70000000298023,
+        104.80000000074506,
+        104.5,
+        104.5,
+        104.80000000074506,
+        104.69999999925494,
+        104.5,
+        104.5
+      ],
+      "readbackMs": 21.300000000745058
+    },
+    {
+      "scale": 2,
+      "points": 2017,
+      "addedPoints": 16,
+      "scenario": "small-increment",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 2.099999997764826,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "referenceSubmitMs": {
+        "median": 105.90000000223517,
+        "p95": 106.30000000074506
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        106.30000000074506,
+        105.90000000223517,
+        105.69999999925494,
+        106.09999999776483,
+        106,
+        105.90000000223517,
+        105.80000000074506,
+        106,
+        105.90000000223517,
+        105.69999999925494
+      ],
+      "readbackMs": 22.300000000745058
+    },
+    {
+      "scale": 2,
+      "points": 2049,
+      "addedPoints": 32,
+      "scenario": "small-increment",
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "appendSubmitMs": 4,
+      "cachedSubmitMs": {
+        "median": 0,
+        "p95": 0
+      },
+      "referenceSubmitMs": {
+        "median": 109.50000000186265,
+        "p95": 110.59999999776483
+      },
+      "cachedSamplesMs": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "referenceSamplesMs": [
+        109.19999999925494,
+        109.30000000074506,
+        109.19999999925494,
+        110.5,
+        110.09999999776483,
+        109.20000000298023,
+        109.40000000223517,
+        109.60000000149012,
+        110.59999999776483,
+        109.69999999925494
+      ],
+      "readbackMs": 23.199999999254942
+    }
+  ],
+  "notes": "Single growing gesture with bulk growth followed by +1/+16/+32 point increments after 2000 points. Geometry is precomputed and excluded. Append timing separated from 10 warmed redraw pairs after 2 warmup pairs; order alternates. Redraw timings are not incremental drawing latency. Diagnostic timings only; no speedup claim. Readback is outside submit timings. Scales are explicit backing-store scales, not a device DPR change. Native path memory not measured."
+}

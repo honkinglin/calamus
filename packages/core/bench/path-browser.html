@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Calamus path cache verification</title>
 <style>body{font:15px system-ui;margin:32px auto;max-width:960px;padding:0 16px;color:#263b34}button{padding:10px 16px;margin:8px 8px 8px 0}canvas{width:100%;border:1px solid #ccc}pre{white-space:pre-wrap;overflow-wrap:anywhere}</style></head><body>
-<h1>Path cache verification</h1><p>Compares incremental transparent paths with the existing single-fill renderer. Each size separates initial append from 10 warmed redraw pairs, alternating renderer order. Timings measure synchronous submission and pixel readback separately, not input latency or GPU completion.</p>
+<h1>Path cache verification</h1><p>Compares incremental transparent paths with the existing single-fill renderer. Includes +1/+16/+32 point increments after a 2000-point stroke. Each size separates initial append from 10 warmed redraw pairs, alternating renderer order. Timings measure synchronous submission and pixel readback separately, not input latency or GPU completion.</p>
 <button id="run">Run comparison</button><button id="download" disabled>Download report</button><p id="status" role="status">Ready.</p><canvas id="preview" width="1000" height="700"></canvas><pre id="report"></pre>
 <script type="module" src="./path-browser.ts"></script></body></html>
