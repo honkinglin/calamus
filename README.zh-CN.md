@@ -45,3 +45,7 @@ pnpm example:build
 [开发进度](docs/PROGRESS.md)区分实现完成与验收完成；[性能报告](docs/PERFORMANCE.md)保留测量条件，不将 Node 计算耗时当作浏览器帧率。
 
 [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [Release checklist](docs/RELEASE_CHECKLIST.md)
+
+### 键盘备份
+
+在画板区域使用 Ctrl+S（Windows/Linux）或 Cmd+S（macOS）下载当前作品的 JSON 备份。文件使用已保存的作品名称；可通过 Import 重新导入。输入框、作品/实验弹窗和移动设置弹窗内不接管这些画板命令。自动保存仍只保存在当前浏览器设备上，JSON 文件可用于手动备份。

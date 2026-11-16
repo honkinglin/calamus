@@ -1,3 +1,4 @@
+import { shortcutFor } from './shortcuts';
 import { exportFilename } from './export-filename';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -116,7 +117,7 @@ function App() {
     if (ready && libraryOpen && dialog?.open && !dialog.contains(document.activeElement)) {
       dialog.querySelector<HTMLButtonElement>('button')?.focus();
     }
-  }, [ready, libraryOpen, labOpen]);
+  }, [ready, libraryOpen, labOpen, mobile, settingsOpen, activeDrawing?.name]);
   const [replayState, setReplayState] = useState<ReplayState>('idle');
   const [replaySpeed, setReplaySpeed] = useState(1);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -265,28 +266,22 @@ function App() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!ready || libraryOpen || labOpen || event.isComposing || event.repeat || event.altKey) return;
+      if (!ready || libraryOpen || labOpen || (mobile && settingsOpen)) return;
       if (event.target instanceof HTMLElement &&
           (event.target.isContentEditable || event.target.closest('input, textarea, select'))) return;
-      const key = event.key.toLowerCase();
-      if (event.metaKey || event.ctrlKey) {
-        if (key === 'z') {
-          event.preventDefault();
-          step(event.shiftKey);
-        } else if (key === 'y' && event.ctrlKey && !event.metaKey && !event.shiftKey) {
-          event.preventDefault();
-          step(true);
-        }
-      } else if (!event.shiftKey && (key === 'b' || key === 'e' || key === 'h')) {
-        event.preventDefault();
-        if (gestureId.current !== null) return;
-        setHand(key === 'h');
-        if (key !== 'h') setTool(key === 'b' ? 'pen' : 'eraser');
-      }
+      const command = shortcutFor(event);
+      if (!command) return;
+      event.preventDefault();
+      if (command === 'save') { exportFile('JSON'); return; }
+      if (command === 'undo' || command === 'redo') { step(command === 'redo'); return; }
+      if (gestureId.current !== null) return;
+      setHand(command === 'hand');
+      if (command !== 'hand') setTool(command);
+
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [ready, libraryOpen, labOpen]);
+  }, [ready, libraryOpen, labOpen, mobile, settingsOpen, activeDrawing?.name]);
 
   function exportFile(format: 'SVG' | 'JSON') {
     const board = engine.current;
@@ -362,7 +357,7 @@ function App() {
               <p className="eyebrow">SAVE A COPY</p>
               <button disabled={exporting} onClick={() => { closeExportMenu(); void exportImage(); }}>{exporting ? 'Exporting…' : 'PNG image'}<span>Raster</span></button>
               <button onClick={() => { closeExportMenu(); exportFile('SVG'); }}>SVG image<span>Vector</span></button>
-              <button onClick={() => { closeExportMenu(); exportFile('JSON'); }}>Calamus document<span>JSON</span></button>
+              <button aria-keyshortcuts="Control+S Meta+S" title="Save JSON backup (Ctrl/Cmd + S)" onClick={() => { closeExportMenu(); exportFile('JSON'); }}>Calamus document<span>JSON</span></button>
             </div>
           </details>
         </div>

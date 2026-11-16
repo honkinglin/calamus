@@ -6,6 +6,8 @@ No published releases yet. Package version 0.1.0 is a development version.
 
 ### Web
 
+- Ctrl/Cmd+S exports a named JSON backup from the drawing workspace; shortcut handling respects consumed events, composition, editable controls and dialogs.
+
 - PNG, SVG and JSON downloads use the current drawing name with portable filename sanitization, Unicode support and a bounded UTF-8 length. PNG captures the name before asynchronous rendering.
 
 ### SDK
