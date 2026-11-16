@@ -2,7 +2,7 @@ export type Shortcut = 'undo' | 'redo' | 'pen' | 'eraser' | 'hand' | 'save';
 type Key = Pick<KeyboardEvent, 'key' | 'metaKey' | 'ctrlKey' | 'shiftKey' | 'altKey' | 'isComposing' | 'repeat' | 'defaultPrevented'>;
 
 export function shortcutFor(event: Key): Shortcut | undefined {
-  if (event.defaultPrevented || event.isComposing || event.repeat || event.altKey) return;
+  if (event.defaultPrevented || event.isComposing || event.altKey) return;
   const key = event.key.toLowerCase();
   if (event.metaKey || event.ctrlKey) {
     if (key === 'z') return event.shiftKey ? 'redo' : 'undo';
@@ -11,4 +11,12 @@ export function shortcutFor(event: Key): Shortcut | undefined {
     return;
   }
   if (!event.shiftKey) return ({b:'pen',e:'eraser',h:'hand'} as const)[key as 'b'|'e'|'h'];
+}
+
+/** Consume recognized keys even on repeat, without repeating their action. */
+export function consumeShortcut(event: Key & Pick<KeyboardEvent, 'preventDefault'>): Shortcut | undefined {
+  const command = shortcutFor(event);
+  if (!command) return;
+  event.preventDefault();
+  return event.repeat ? undefined : command;
 }

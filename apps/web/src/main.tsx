@@ -1,4 +1,4 @@
-import { shortcutFor } from './shortcuts';
+import { consumeShortcut } from './shortcuts';
 import { exportFilename } from './export-filename';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -269,9 +269,8 @@ function App() {
       if (!ready || libraryOpen || labOpen || (mobile && settingsOpen)) return;
       if (event.target instanceof HTMLElement &&
           (event.target.isContentEditable || event.target.closest('input, textarea, select'))) return;
-      const command = shortcutFor(event);
+      const command = consumeShortcut(event);
       if (!command) return;
-      event.preventDefault();
       if (command === 'save') { exportFile('JSON'); return; }
       if (command === 'undo' || command === 'redo') { step(command === 'redo'); return; }
       if (gestureId.current !== null) return;
