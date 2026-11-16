@@ -1,3 +1,4 @@
+import { nextFrame } from './next-frame';
 import { ActiveStrokePath } from '../src/active-path';
 import { createStrokeGeometry } from '../src/geometry';
 import { drawGeometry } from '../src/render';
@@ -8,8 +9,16 @@ const status = document.querySelector<HTMLElement>('#status')!;
 const output = document.querySelector<HTMLElement>('#report')!;
 const preview = document.querySelector<HTMLCanvasElement>('#preview')!;
 let report = '';
-const yieldFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+const cancel = document.querySelector<HTMLButtonElement>('#cancel')!;
+let task: AbortController | undefined;
+cancel.onclick = () => task?.abort();
+document.addEventListener('visibilitychange', () => { if (document.hidden) task?.abort(); });
+window.addEventListener('pagehide', () => task?.abort());
 run.onclick = async () => {
+  if (task) return;
+  const controller = new AbortController(); task = controller; cancel.disabled = false;
+  const frame = () => nextFrame(controller.signal);
+
   run.disabled = download.disabled = true; report = ''; output.textContent = '';
   try {
     if (typeof Path2D === 'undefined') throw new Error('Path2D unavailable.');
@@ -26,7 +35,7 @@ run.onclick = async () => {
         let previousCount = 0;
         for (const count of [1, 100, 500, 1000, 2000, 2001, 2017, 2049]) {
           if (document.hidden) throw new Error('Keep this tab visible.');
-          status.textContent = `Comparing ${count} points at scale ${scale}…`; await yieldFrame();
+          status.textContent = `Comparing ${count} points at scale ${scale}…`; await frame();
           const prefix = geometry.slice(0, count * 2 - 1);
           const cachedSamplesMs: number[] = [], referenceSamplesMs: number[] = [];
           let usedCache = false;
@@ -46,7 +55,7 @@ run.onclick = async () => {
           // First draw includes appending the new portion; report separately from warmed redraws.
           const appendSubmitMs = drawCached();
           for (let sample = 0; sample < 12; sample++) {
-            await yieldFrame();
+            await frame();
             if (document.hidden) throw new Error('Keep this tab visible.');
             let cachedMs: number, referenceMs: number;
             if (sample % 2 === 0) { cachedMs = drawCached(); referenceMs = drawReference(); }
@@ -69,7 +78,7 @@ run.onclick = async () => {
       notes:'Single growing gesture with bulk growth followed by +1/+16/+32 point increments after 2000 points. Geometry is precomputed and excluded. Append timing separated from 10 warmed redraw pairs after 2 warmup pairs; order alternates. Redraw timings are not incremental drawing latency. Diagnostic timings only; no speedup claim. Readback is outside submit timings. Scales are explicit backing-store scales, not a device DPR change. Native path memory not measured.'},null,2);
     output.textContent=report;download.disabled=false;
     status.textContent=rows.every(row=>row.changedPixels===0)?'Passed: all pixel comparisons match.':'Pixel differences detected; inspect report.';
-  } catch(error){status.textContent=error instanceof Error?error.message:String(error);} finally{run.disabled=false;}
+  } catch(error){status.textContent=error instanceof Error?error.message:String(error);} finally{task=undefined;cancel.disabled=true;run.disabled=false;}
 };
 download.onclick=()=>{const url=URL.createObjectURL(new Blob([report],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='calamus-path-cache.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 
