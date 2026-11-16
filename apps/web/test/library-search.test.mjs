@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { filterDrawings } from '../src/library.ts';
+import { filterDrawings, sortDrawings } from '../src/library.ts';
 const drawings = [
   {id:'a',name:'Spring Sketch',json:'{}',updatedAt:1},
   {id:'b',name:'春日 🎨',json:'{}',updatedAt:2},
@@ -18,4 +18,16 @@ test('clearing search restores stable order without mutating source', () => {
   filterDrawings(drawings, 'study');
   assert.deepEqual(drawings, before);
   assert.notEqual(filterDrawings(drawings, ''), drawings);
+});
+
+test('recent order puts newest first and preserves input and tied order', () => {
+  const source = [...drawings, {...drawings[0], id:'d', updatedAt:3}];
+  const before = structuredClone(source);
+  assert.deepEqual(sortDrawings(source, 'recent').map(d => d.id), ['c','d','b','a']);
+  assert.deepEqual(source, before);
+});
+test('name order uses natural numbers and composes with search', () => {
+  const source = ['Sketch 10','Ｓｋｅｔｃｈ 2','Other','sketch 1'].map((name,i) => ({...drawings[0],id:String(i),name}));
+  assert.deepEqual(sortDrawings(filterDrawings(source, 'sketch'), 'name').map(d => d.id), ['3','1','0']);
+  assert.deepEqual(sortDrawings([], 'name'), []);
 });

@@ -132,6 +132,9 @@
   .library-panel p { @apply my-3 text-xs leading-relaxed text-muted; }
   .drawing-search { @apply mt-5; }
   .drawing-search label { @apply mb-2 block text-xs font-medium text-muted; }
+  .drawing-sort { @apply mt-3 flex flex-wrap items-center gap-2; }
+  .drawing-sort label { @apply mb-0 shrink-0; }
+  .drawing-sort select { min-width: 0; max-width: 100%; @apply flex-1; }
   .drawing-search input { min-width: 0; }
   .drawing-list { @apply my-5 grid list-none gap-2 p-0; }
   .drawing-list button { @apply w-full justify-between gap-3 p-2 text-left; }

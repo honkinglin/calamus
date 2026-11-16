@@ -106,3 +106,13 @@ export function filterDrawings(drawings: readonly Drawing[], query: string): Dra
   const search = query.normalize('NFKC').trim().toLowerCase();
   return drawings.filter(drawing => drawing.name.normalize('NFKC').toLowerCase().includes(search));
 }
+
+export type DrawingOrder = 'recent' | 'name';
+const drawingNameOrder = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+
+/** Sort a view copy; never reorder the persisted library. */
+export function sortDrawings(drawings: readonly Drawing[], order: DrawingOrder): Drawing[] {
+  return [...drawings].sort((a, b) => order === 'recent'
+    ? b.updatedAt - a.updatedAt
+    : drawingNameOrder.compare(a.name.normalize('NFKC'), b.name.normalize('NFKC')));
+}

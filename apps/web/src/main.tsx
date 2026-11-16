@@ -5,8 +5,8 @@ import { createRoot } from 'react-dom/client';
 import { Calamus, parseDocument } from '@calamus/core';
 import type { ReplayState } from '@calamus/core';
 import { drawingStore } from './storage';
-import { createLibrary, filterDrawings } from './library';
-import type { Drawing } from './library';
+import { createLibrary, filterDrawings, sortDrawings } from './library';
+import type { Drawing, DrawingOrder } from './library';
 import { createImportController } from './import-controller';
 import { createThumbnail } from './thumbnail';
 import { clampZoom, zoomScroll } from './viewport';
@@ -77,7 +77,8 @@ function App() {
   const [activeDrawing, setActiveDrawing] = useState<Drawing | null>(null);
   const [drawingName, setDrawingName] = useState('');
   const [drawingSearch, setDrawingSearch] = useState('');
-  const visibleDrawings = useMemo(() => filterDrawings(drawings, drawingSearch), [drawings, drawingSearch]);
+  const [drawingOrder, setDrawingOrder] = useState<DrawingOrder>('recent');
+  const visibleDrawings = useMemo(() => sortDrawings(filterDrawings(drawings, drawingSearch), drawingOrder), [drawings, drawingSearch, drawingOrder]);
   const [libraryMessage, setLibraryMessage] = useState('');
   const [trash, setTrash] = useState<Drawing[]>([]);
   const thumbnails = useMemo(() => libraryOpen
@@ -534,6 +535,13 @@ function App() {
             <input id="drawing-search" type="search" placeholder="Search by name" value={drawingSearch}
               aria-controls="drawing-results" onChange={event => setDrawingSearch(event.currentTarget.value)} />
             {drawingSearch && <button onClick={() => { setDrawingSearch(''); document.getElementById('drawing-search')?.focus(); }}>Clear search</button>}
+          </div>
+          <div className="drawing-sort">
+            <label htmlFor="drawing-order">Sort by</label>
+            <select id="drawing-order" value={drawingOrder} onChange={event => setDrawingOrder(event.currentTarget.value as DrawingOrder)}>
+              <option value="recent">Recently modified</option>
+              <option value="name">Name</option>
+            </select>
           </div>
           <p role="status">{visibleDrawings.length} of {drawings.length} drawings</p>
         </div>
