@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 2,
+  "readbackContext": false,
+  "recordedAt": "2026-11-16T03:24:35.000Z",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+  "devicePixelRatio": 2,
+  "canvasWidth": 1088,
+  "canvasHeight": 762,
+  "passed": false,
+  "jsonUnchanged": true,
+  "documentUnchanged": true,
+  "pauseStable": true,
+  "states": [
+    "playing",
+    "paused",
+    "playing",
+    "idle",
+    "playing",
+    "idle"
+  ],
+  "rows": [
+    {
+      "name": "repeat read without redraw",
+      "changedPixels": 125371,
+      "maxChannelDelta": 1,
+      "changedRGBPixels": 125371,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "clear / undo",
+      "changedPixels": 125371,
+      "maxChannelDelta": 1,
+      "changedRGBPixels": 125371,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "redo / undo",
+      "changedPixels": 125371,
+      "maxChannelDelta": 1,
+      "changedRGBPixels": 125371,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "JSON round trip",
+      "changedPixels": 125371,
+      "maxChannelDelta": 1,
+      "changedRGBPixels": 125371,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "PNG round trip",
+      "changedPixels": 105530,
+      "maxChannelDelta": 1,
+      "changedRGBPixels": 105530,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay completion",
+      "changedPixels": 125371,
+      "maxChannelDelta": 1,
+      "changedRGBPixels": 125371,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay cancellation",
+      "changedPixels": 125371,
+      "maxChannelDelta": 1,
+      "changedRGBPixels": 125371,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    }
+  ],
+  "notes": "Synthetic 2 x 500 point transparent crossing strokes. Public SDK API; no live pointer input, native memory or frame latency measurement. PNG check compares exported raster before/after document round trip."
+}
