@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-15T19:27:02.803Z",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+  "rows": [
+    {
+      "scale": 1,
+      "points": 1,
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "cachedSubmitMs": 0.5,
+      "referenceSubmitMs": 0.19999999925494194,
+      "readbackMs": 9.800000000745058
+    },
+    {
+      "scale": 1,
+      "points": 100,
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "cachedSubmitMs": 0.5,
+      "referenceSubmitMs": 1.3999999985098839,
+      "readbackMs": 27
+    },
+    {
+      "scale": 1,
+      "points": 500,
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "cachedSubmitMs": 7.299999997019768,
+      "referenceSubmitMs": 7.600000001490116,
+      "readbackMs": 5
+    },
+    {
+      "scale": 1,
+      "points": 1000,
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "cachedSubmitMs": 21.199999999254942,
+      "referenceSubmitMs": 28.300000000745058,
+      "readbackMs": 8
+    },
+    {
+      "scale": 1,
+      "points": 2000,
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "cachedSubmitMs": 83.19999999925494,
+      "referenceSubmitMs": 110.69999999925494,
+      "readbackMs": 14.300000000745058
+    },
+    {
+      "scale": 2,
+      "points": 1,
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "cachedSubmitMs": 0,
+      "referenceSubmitMs": 0.09999999776482582,
+      "readbackMs": 11.900000002235174
+    },
+    {
+      "scale": 2,
+      "points": 100,
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "cachedSubmitMs": 0.4000000022351742,
+      "referenceSubmitMs": 0.30000000074505806,
+      "readbackMs": 18.299999997019768
+    },
+    {
+      "scale": 2,
+      "points": 500,
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "cachedSubmitMs": 7.100000001490116,
+      "referenceSubmitMs": 7.099999997764826,
+      "readbackMs": 10.600000001490116
+    },
+    {
+      "scale": 2,
+      "points": 1000,
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "cachedSubmitMs": 21.099999997764826,
+      "referenceSubmitMs": 27.900000002235174,
+      "readbackMs": 14.199999999254942
+    },
+    {
+      "scale": 2,
+      "points": 2000,
+      "usedCache": true,
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "cachedSubmitMs": 83.10000000149012,
+      "referenceSubmitMs": 111.69999999925494,
+      "readbackMs": 23.600000001490116
+    }
+  ],
+  "notes": "Single growing gesture, one sample per size, cached renderer first. Diagnostic timings only; no speedup claim. Readback is outside submit timings. Scales are explicit backing-store scales, not a device DPR change. Native path memory not measured."
+}
