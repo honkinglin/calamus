@@ -130,6 +130,9 @@
   .icon-button { @apply size-9 border-transparent p-0; }
   .library-panel { position: fixed; inset: 16px auto 16px 16px; margin: 0; width: min(420px, calc(100% - 32px)); max-width: none; height: calc(100dvh - 32px); max-height: none; @apply overflow-y-auto rounded-2xl border border-line bg-panel p-6 shadow-2xl; }
   .library-panel p { @apply my-3 text-xs leading-relaxed text-muted; }
+  .drawing-search { @apply mt-5; }
+  .drawing-search label { @apply mb-2 block text-xs font-medium text-muted; }
+  .drawing-search input { min-width: 0; }
   .drawing-list { @apply my-5 grid list-none gap-2 p-0; }
   .drawing-list button { @apply w-full justify-between gap-3 p-2 text-left; }
   .drawing-list button[aria-current] { @apply border-brand opacity-100; background: var(--color-soft); }

@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { Calamus, parseDocument } from '@calamus/core';
 import type { ReplayState } from '@calamus/core';
 import { drawingStore } from './storage';
-import { createLibrary } from './library';
+import { createLibrary, filterDrawings } from './library';
 import type { Drawing } from './library';
 import { createImportController } from './import-controller';
 import { createThumbnail } from './thumbnail';
@@ -76,11 +76,13 @@ function App() {
   const [drawings, setDrawings] = useState<Drawing[]>([]);
   const [activeDrawing, setActiveDrawing] = useState<Drawing | null>(null);
   const [drawingName, setDrawingName] = useState('');
+  const [drawingSearch, setDrawingSearch] = useState('');
+  const visibleDrawings = useMemo(() => filterDrawings(drawings, drawingSearch), [drawings, drawingSearch]);
   const [libraryMessage, setLibraryMessage] = useState('');
   const [trash, setTrash] = useState<Drawing[]>([]);
   const thumbnails = useMemo(() => libraryOpen
-    ? new Map(drawings.map(drawing => [drawing.id, createThumbnail(drawing.json)]))
-    : new Map<string, string | undefined>(), [libraryOpen, drawings]);
+    ? new Map(visibleDrawings.map(drawing => [drawing.id, createThumbnail(drawing.json)]))
+    : new Map<string, string | undefined>(), [libraryOpen, visibleDrawings]);
   useEffect(() => {
     if (libraryOpen) libraryDialog.current?.showModal();
     else libraryDialog.current?.close();
@@ -338,7 +340,7 @@ function App() {
           <a className="brand" href="./" aria-label="Calamus home"><span className="brand-mark"><Icon name="pen" /></span><span>Calamus</span></a>
           <span className="header-divider" aria-hidden="true" />
           <button aria-label={`Drawings: ${activeDrawing?.name ?? 'Untitled drawing'}`} className="document-switch" ref={libraryButton} disabled={!activeDrawing} aria-haspopup="dialog"
-            onClick={() => { setDrawingName(activeDrawing?.name ?? ''); setDrawings(library.current?.list() ?? []); setTrash(library.current?.trash() ?? []); setLibraryMessage(''); setLibraryOpen(true); }}>
+            onClick={() => { setDrawingName(activeDrawing?.name ?? ''); setDrawings(library.current?.list() ?? []); setTrash(library.current?.trash() ?? []); setLibraryMessage(''); setDrawingSearch(''); setLibraryOpen(true); }}>
             <Icon name="folder" /><span className="truncate">{activeDrawing?.name ?? 'Untitled drawing'}</span><Icon name="chevron" />
           </button>
         </div>
@@ -526,8 +528,18 @@ function App() {
           <button className="icon-button" aria-label="Close drawings" disabled={!ready} onClick={() => setLibraryOpen(false)}><Icon name="close" /></button></div>
         <p>Saved on this device. Export JSON to keep a backup.</p>
         <button className="primary" disabled={!ready} onClick={() => void changeDrawing('create')}><Icon name="plus" />New drawing</button>
-        <ul className="drawing-list">
-          {drawings.map(drawing => <li key={drawing.id}>
+        <div className="drawing-search">
+          <label htmlFor="drawing-search">Search drawings</label>
+          <div className="rename-row">
+            <input id="drawing-search" type="search" placeholder="Search by name" value={drawingSearch}
+              aria-controls="drawing-results" onChange={event => setDrawingSearch(event.currentTarget.value)} />
+            {drawingSearch && <button onClick={() => { setDrawingSearch(''); document.getElementById('drawing-search')?.focus(); }}>Clear search</button>}
+          </div>
+          <p role="status">{visibleDrawings.length} of {drawings.length} drawings</p>
+        </div>
+        {visibleDrawings.length === 0 && <p>No drawings match your search. Try another name or clear the search.</p>}
+        <ul id="drawing-results" className="drawing-list">
+          {visibleDrawings.map(drawing => <li key={drawing.id}>
             <button disabled={!ready || drawing.id === activeDrawing?.id}
               aria-current={drawing.id === activeDrawing?.id ? 'true' : undefined}
               onClick={() => void changeDrawing('open', drawing.id)}>

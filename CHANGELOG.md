@@ -6,6 +6,8 @@ No published releases yet. Package version 0.1.0 is a development version.
 
 ### Web
 
+- Drawing library search supports normalized name matching, result counts, empty states and clearing without changing the active drawing.
+
 - Held shortcuts suppress browser defaults without repeating exports or drawing commands.
 
 - Ctrl/Cmd+S exports a named JSON backup from the drawing workspace; shortcut handling respects consumed events, composition, editable controls and dialogs.

@@ -100,3 +100,9 @@ export function createLibrary(store: DrawingStore) {
     },
   };
 }
+
+/** Match names without changing library order or the selected drawing. */
+export function filterDrawings(drawings: readonly Drawing[], query: string): Drawing[] {
+  const search = query.normalize('NFKC').trim().toLowerCase();
+  return drawings.filter(drawing => drawing.name.normalize('NFKC').toLowerCase().includes(search));
+}
