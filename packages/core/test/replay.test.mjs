@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { replayFrame, replayDuration } from '../dist/replay.js';
+import { replayFrame, replayDuration, createReplayTimeline } from '../dist/replay.js';
 const stroke = {
   brush: { color: '#000', size: 4 },
   points: [0, 50, 100].map(time => ({ x: time, y: 0, pressure: null, time })),
@@ -89,4 +89,29 @@ test('early replay does not scan a large unrevealed sample tail', () => {
   assert.equal(frame[0].points.length, 3);
   assert.equal(frame[0].points[2], points[2]);
   assert.ok(reads < 25, `expected logarithmic timestamp reads, got ${reads}`);
+});
+
+test('indexed timeline matches sequential frames across pauses, ties and backwards seeks', () => {
+  const source = [0, 30, 0, 140].map(duration => ({...stroke,
+    points:[0,0,duration,duration].map(time => ({x:time,y:0,time,pressure:null})),
+  }));
+  const timeline = createReplayTimeline(source);
+  assert.equal(timeline.duration, replayDuration(source));
+  for (let time = timeline.duration + 1; time >= -1; time--) {
+    assert.deepEqual(timeline.frame(time), replayFrame(source,time));
+  }
+  assert.deepEqual(createReplayTimeline([]).frame(0), []);
+  assert.equal(createReplayTimeline([]).duration, 0);
+});
+test('indexed frames do not reread completed stroke timestamps', () => {
+  let reads = 0;
+  const source = Array.from({length:10_000}, () => ({...stroke,points:[{
+    x:0,y:0,pressure:null,get time() { reads++; return 0; },
+  }]}));
+  const timeline = createReplayTimeline(source);
+  reads = 0;
+  assert.equal(timeline.frame(9999 * 120).length, 10_000);
+  assert.equal(reads, 0);
+  source.pop();
+  assert.equal(timeline.frame(timeline.duration).length, 10_000, 'session owns its list snapshot');
 });

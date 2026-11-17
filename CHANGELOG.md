@@ -22,6 +22,8 @@ No published releases yet. Package version 0.1.0 is a development version.
 
 ### SDK
 
+- Playback sessions index stroke end times to locate completed and active strokes without rescanning completed timestamps on each frame.
+
 - Replay computes total duration once per playback session instead of scanning every stroke on each animation frame.
 
 - Replay uses binary search to locate visible samples in partial strokes, avoiding full scans of unrevealed samples while retaining timestamp boundary behavior.
