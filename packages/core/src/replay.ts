@@ -12,7 +12,16 @@ export function replayFrame(strokes: readonly Stroke[], elapsed: number): Stroke
     const duration = stroke.points.at(-1)?.time ?? 0;
     if (remaining >= duration) visible.push(stroke);
     else {
-      const points = stroke.points.filter(point => point.time <= remaining);
+      // Input timestamps are monotonic. Find the first future sample without
+      // reading the entire unrevealed tail on every animation frame.
+      let low = 0;
+      let high = stroke.points.length;
+      while (low < high) {
+        const middle = low + Math.floor((high - low) / 2);
+        if (stroke.points[middle]!.time <= remaining) low = middle + 1;
+        else high = middle;
+      }
+      const points = stroke.points.slice(0, low);
       if (points.length) visible.push({ brush: stroke.brush, points });
       break;
     }

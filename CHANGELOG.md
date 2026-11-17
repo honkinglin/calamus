@@ -22,6 +22,8 @@ No published releases yet. Package version 0.1.0 is a development version.
 
 ### SDK
 
+- Replay uses binary search to locate visible samples in partial strokes, avoiding full scans of unrevealed samples while retaining timestamp boundary behavior.
+
 - Active translucent strokes reuse a bounded incremental Path2D while retaining one nonzero fill per frame; unsupported environments and oversized geometry fall back to the existing renderer. Browser pixel/performance acceptance remains pending.
 
 - TypeScript Canvas 2D engine with adaptive smoothing, radius following, pressure and velocity width.

@@ -53,3 +53,40 @@ test('corner replay emits the same canvas commands as live sample prefixes', asy
     }
   }
 });
+
+test('binary replay boundary includes all tied timestamps and respects inter-stroke gaps', () => {
+  const timed = times => ({...stroke, points:times.map(time => ({x:time,y:0,pressure:null,time}))});
+  const source = [timed([0,0,20,20,100]), timed([0,30,30,60])];
+  const before = structuredClone(source);
+  const reference = elapsed => {
+    const result = [];
+    let remaining = Math.max(0, elapsed);
+    for (const item of source) {
+      const duration = item.points.at(-1).time;
+      if (remaining >= duration) result.push(item);
+      else {
+        const points = item.points.filter(point => point.time <= remaining);
+        if (points.length) result.push({...item,points});
+        break;
+      }
+      remaining -= duration + 120;
+      if (remaining < 0) break;
+    }
+    return result;
+  };
+  for (let elapsed = -1; elapsed <= replayDuration(source) + 1; elapsed++) {
+    assert.deepEqual(replayFrame(source, elapsed), reference(elapsed));
+  }
+  assert.deepEqual(source, before);
+});
+test('early replay does not scan a large unrevealed sample tail', () => {
+  let reads = 0;
+  const points = Array.from({length:100_000}, (_, time) => ({
+    x:time, y:0, pressure:null,
+    get time() { reads++; return time; },
+  }));
+  const frame = replayFrame([{...stroke, points}], 2);
+  assert.equal(frame[0].points.length, 3);
+  assert.equal(frame[0].points[2], points[2]);
+  assert.ok(reads < 25, `expected logarithmic timestamp reads, got ${reads}`);
+});
