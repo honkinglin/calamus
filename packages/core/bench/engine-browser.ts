@@ -34,7 +34,7 @@ run.onclick=async()=>{
   const states:string[]=[];
   try {
     board=new Calamus(canvas,{width:1000,height:700,onReplayChange:state=>states.push(state)});
-    const strokes=['#254e4366','#b85c4c66'].map((color,index)=>({brush:{color,size:20,smoothing:0.55,velocityWidth:false},points:Array.from({length:500},(_,i)=>({x:100+i/499*800,y:350+Math.sin(i/25+index)*220,time:i*2,pressure:null}))}));
+    const strokes=['#254e4366','#b85c4c66'].map((color,index)=>({brush:{color,size:20,smoothing:0.55,velocityWidth:false},points:Array.from({length:500},(_,i)=>({x:100+i/499*800,y:350+Math.sin(i/25+index)*220,time:i*2.3,pressure:null}))}));
     board.loadJSON(JSON.stringify({schemaVersion:1,width:1000,height:700,strokes}),{resetHistory:true});
     await frame();const baseline=pixels();const json=board.exportJSON();
     const rows: ({name:string}&ReturnType<typeof difference>)[]=[];
@@ -67,8 +67,10 @@ run.onclick=async()=>{
     board.play({speed:4});await frame();board.stopReplay();await frame();compare('replay cancellation');
     if(controller.signal.aborted) throw new Error('Measurement cancelled.');
     const documentUnchanged=board.exportJSON()===json;
-    const passed=jsonUnchanged&&documentUnchanged&&pauseStable&&rows.every(row=>row.changedPixels===0);
-    report=JSON.stringify({schemaVersion:2,readbackContext,recordedAt:new Date().toISOString(),userAgent:navigator.userAgent,devicePixelRatio,canvasWidth:canvas.width,canvasHeight:canvas.height,passed,jsonUnchanged,documentUnchanged,pauseStable,states,rows,notes:'Synthetic 2 x 500 point transparent crossing strokes. Public SDK API; no live pointer input, native memory or frame latency measurement. PNG check compares exported raster before/after document round trip.'},null,2);
+    const expectedStates = ['playing','paused','playing','idle','playing','idle'];
+    const stateSequenceMatches = states.length === expectedStates.length && states.every((state,index) => state === expectedStates[index]);
+    const passed=stateSequenceMatches&&jsonUnchanged&&documentUnchanged&&pauseStable&&rows.every(row=>row.changedPixels===0);
+    report=JSON.stringify({schemaVersion:3,stateSequenceMatches,expectedStates,readbackContext,recordedAt:new Date().toISOString(),userAgent:navigator.userAgent,devicePixelRatio,canvasWidth:canvas.width,canvasHeight:canvas.height,passed,jsonUnchanged,documentUnchanged,pauseStable,states,rows,notes:'Synthetic 2 x 500 point transparent crossing strokes with 2.3ms sample intervals. State sequence is part of pass criteria; intermediate fractional boundaries are covered by unit tests, not this final-frame pixel comparison. Public SDK API; no live pointer input, native memory or frame latency measurement. PNG check compares exported raster before/after document round trip.'},null,2);
     output.textContent=report;download.disabled=false;status.textContent=passed?'Passed: engine checks match.':'Differences detected; inspect report.';
   }catch(error){status.textContent=error instanceof Error?error.message:String(error);}finally{board?.destroy();task=undefined;cancel.disabled=true;run.disabled=readback.disabled=false;}
 };
