@@ -34,8 +34,11 @@
 3. 发布准备：包名/scope/身份、版本、作者与许可证、展示素材、CI 浏览器流程。
 4. 推送/部署/npm 发布按明确任务执行；当前线上站点不代表最新本地代码。
 
+- 已新增回放 Node 基准及六场景报告，多笔画查找改善，单笔长线约持平；详见 REPLAY_BENCHMARK.md，不能推导浏览器 FPS。
+
 ## 常用检查
 
+- pnpm bench:replay：回放查找正确性对照和 Node 耗时报告。
 - pnpm test：核心、Web 和原生示例测试。
 - pnpm --filter @calamus/web build：Web 类型检查与构建。
 - pnpm check:package：真实 tarball 独立安装与消费验证。

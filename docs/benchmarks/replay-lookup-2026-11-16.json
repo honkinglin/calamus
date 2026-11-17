@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "node": "v24.14.0",
+  "platform": "darwin",
+  "arch": "arm64",
+  "samples": 30,
+  "warmup": 5,
+  "checksum": 11553780,
+  "scope": "Node CPU lookup and visible-array allocation only; excludes Canvas, GPU, input latency and browser memory. Setup is a single sample per scenario. No performance threshold.",
+  "rows": [
+    {
+      "name": "single-long",
+      "strokes": 1,
+      "points": 100000,
+      "fraction": 0.01,
+      "setupMs": 0.04283399999999915,
+      "elapsed": 4001,
+      "matched": true,
+      "sequential": {
+        "medianMs": 0.0018749999999982947,
+        "p95Ms": 0.009709000000000856
+      },
+      "indexed": {
+        "medianMs": 0.0019580000000019027,
+        "p95Ms": 0.017875000000000085
+      }
+    },
+    {
+      "name": "single-long",
+      "strokes": 1,
+      "points": 100000,
+      "fraction": 0.5,
+      "setupMs": 0.04283399999999915,
+      "elapsed": 200058,
+      "matched": true,
+      "sequential": {
+        "medianMs": 0.025458000000000425,
+        "p95Ms": 0.03966700000000145
+      },
+      "indexed": {
+        "medianMs": 0.0280830000000023,
+        "p95Ms": 0.1998330000000017
+      }
+    },
+    {
+      "name": "single-long",
+      "strokes": 1,
+      "points": 100000,
+      "fraction": 0.99,
+      "setupMs": 0.04283399999999915,
+      "elapsed": 396114,
+      "matched": true,
+      "sequential": {
+        "medianMs": 0.052084000000000685,
+        "p95Ms": 0.20725000000000193
+      },
+      "indexed": {
+        "medianMs": 0.0519999999999996,
+        "p95Ms": 0.20858399999999833
+      }
+    },
+    {
+      "name": "many-short",
+      "strokes": 10000,
+      "points": 10,
+      "fraction": 0.01,
+      "setupMs": 1.009834000000005,
+      "elapsed": 15600,
+      "matched": true,
+      "sequential": {
+        "medianMs": 0.005667000000002531,
+        "p95Ms": 0.006915999999996814
+      },
+      "indexed": {
+        "medianMs": 0.0005000000000023874,
+        "p95Ms": 0.0013750000000030127
+      }
+    },
+    {
+      "name": "many-short",
+      "strokes": 10000,
+      "points": 10,
+      "fraction": 0.5,
+      "setupMs": 1.009834000000005,
+      "elapsed": 780000,
+      "matched": true,
+      "sequential": {
+        "medianMs": 0.07716700000000287,
+        "p95Ms": 0.1629999999999967
+      },
+      "indexed": {
+        "medianMs": 0.007374999999996135,
+        "p95Ms": 0.1412910000000025
+      }
+    },
+    {
+      "name": "many-short",
+      "strokes": 10000,
+      "points": 10,
+      "fraction": 0.99,
+      "setupMs": 1.009834000000005,
+      "elapsed": 1544400,
+      "matched": true,
+      "sequential": {
+        "medianMs": 0.05966699999999747,
+        "p95Ms": 0.07754099999999653
+      },
+      "indexed": {
+        "medianMs": 0.005791999999999575,
+        "p95Ms": 0.007915999999994483
+      }
+    }
+  ]
+}

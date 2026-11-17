@@ -20,7 +20,8 @@
     "example:vanilla": "pnpm example:prepare && pnpm --dir apps/web exec vite ../../examples/vanilla --host 127.0.0.1",
     "example:build": "pnpm example:prepare && pnpm --dir apps/web exec vite build ../../examples/vanilla",
     "release:check": "node scripts/release-readiness.mjs",
-    "bench:path:browser": "pnpm --filter @calamus/web exec vite ../../packages/core/bench --host 127.0.0.1 --port 5175"
+    "bench:path:browser": "pnpm --filter @calamus/web exec vite ../../packages/core/bench --host 127.0.0.1 --port 5175",
+    "bench:replay": "pnpm --filter @calamus/core build && node packages/core/bench/replay.mjs"
   },
   "devDependencies": {
     "typescript": "5.9.3"
