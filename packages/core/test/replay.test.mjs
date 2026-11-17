@@ -115,3 +115,18 @@ test('indexed frames do not reread completed stroke timestamps', () => {
   source.pop();
   assert.equal(timeline.frame(timeline.duration).length, 10_000, 'session owns its list snapshot');
 });
+
+test('fractional samples appear at their cumulative boundary without an epsilon', () => {
+  const timed = times => ({...stroke, points:times.map(time => ({x:time,y:0,time,pressure:null}))});
+  const source = [timed([0,0.1]), timed([0,0.3,0.3,1])];
+  const timeline = createReplayTimeline(source);
+  const start = 120.1;
+  const boundary = start + 0.3;
+  assert.ok(boundary - start < 0.3, 'fixture reproduces subtractive rounding');
+  assert.equal(timeline.frame(boundary)[1].points.length, 3);
+  assert.equal(timeline.frame(boundary - 1e-10)[1].points.length, 1);
+  assert.equal(timeline.frame(boundary + 1e-10)[1].points.length, 3);
+  assert.equal(timeline.frame(start - 1e-10).length, 1);
+  assert.equal(timeline.frame(start)[1].points.length, 1);
+  assert.equal(timeline.frame(start + 1)[1], source[1]);
+});

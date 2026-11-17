@@ -4,6 +4,19 @@ export function replayDuration(strokes: readonly Stroke[]): number {
   return strokes.reduce((duration, stroke) => duration + (stroke.points.at(-1)?.time ?? 0) + 120, 0);
 }
 
+/** Compare on the same timeline to avoid subtractive rounding at sample boundaries. */
+function partialStroke(stroke: Stroke, elapsed: number, start = 0): Stroke | undefined {
+  let low = 0;
+  let high = stroke.points.length;
+  while (low < high) {
+    const middle = low + Math.floor((high - low) / 2);
+    if (start + stroke.points[middle]!.time <= elapsed) low = middle + 1;
+    else high = middle;
+  }
+  if (low === 0) return;
+  return { brush: stroke.brush, points: stroke.points.slice(0, low) };
+}
+
 /** Strokes use relative timestamps, with a fixed pause between strokes. */
 export function replayFrame(strokes: readonly Stroke[], elapsed: number): Stroke[] {
   const visible: Stroke[] = [];
@@ -12,17 +25,8 @@ export function replayFrame(strokes: readonly Stroke[], elapsed: number): Stroke
     const duration = stroke.points.at(-1)?.time ?? 0;
     if (remaining >= duration) visible.push(stroke);
     else {
-      // Input timestamps are monotonic. Find the first future sample without
-      // reading the entire unrevealed tail on every animation frame.
-      let low = 0;
-      let high = stroke.points.length;
-      while (low < high) {
-        const middle = low + Math.floor((high - low) / 2);
-        if (stroke.points[middle]!.time <= remaining) low = middle + 1;
-        else high = middle;
-      }
-      const points = stroke.points.slice(0, low);
-      if (points.length) visible.push({ brush: stroke.brush, points });
+      const partial = partialStroke(stroke, remaining);
+      if (partial) visible.push(partial);
       break;
     }
     remaining -= duration + 120;
@@ -54,7 +58,10 @@ export function createReplayTimeline(strokes: readonly Stroke[]) {
       const visible = source.slice(0, low);
       const next = source[low];
       const start = low === 0 ? 0 : ends[low - 1]! + 120;
-      if (next && time >= start) visible.push(...replayFrame([next], time - start));
+      if (next && time >= start) {
+        const partial = partialStroke(next, time, start);
+        if (partial) visible.push(partial);
+      }
       return visible;
     },
   };

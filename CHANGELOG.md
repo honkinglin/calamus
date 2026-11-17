@@ -22,6 +22,8 @@ No published releases yet. Package version 0.1.0 is a development version.
 
 ### SDK
 
+- Indexed replay compares sample boundaries on the cumulative timeline to prevent subtractive floating-point rounding from omitting fractional-time samples at their boundary.
+
 - Playback sessions index stroke end times to locate completed and active strokes without rescanning completed timestamps on each frame.
 
 - Replay computes total duration once per playback session instead of scanning every stroke on each animation frame.
