@@ -7,6 +7,7 @@ import { StrokeGeometryCache } from './geometry.js';
 import { exportBounds } from './bounds.js';
 import type { CropOptions } from './bounds.js';
 import { StrokeHitCache } from './hit-test.js';
+import { ReplayRenderer } from './replay-render.js';
 import { createReplayTimeline } from './replay.js';
 import { createSVG } from './export.js';
 import { parseDocument, validateDocument, validateBrush, MAX_STROKES, MAX_POINTS } from './document.js';
@@ -43,7 +44,7 @@ export class Calamus {
   private hitCache = new StrokeHitCache();
   private strokes: Stroke[] = [];
   private pointCount = 0;
-  private playback: { elapsed: number; previous: number | null; paused: boolean; speed: number; timeline: ReturnType<typeof createReplayTimeline> } | null = null;
+  private playback: { elapsed: number; previous: number | null; paused: boolean; speed: number; timeline: ReturnType<typeof createReplayTimeline>; renderer: ReplayRenderer } | null = null;
   private playbackFrame = 0;
   private past: Stroke[][] = [];
   private future: Stroke[][] = [];
@@ -114,7 +115,7 @@ export class Calamus {
     this.cancel();
     this.stopReplay();
     if (!this.strokes.length) return;
-    this.playback = { elapsed: 0, previous: null, paused: false, speed, timeline: createReplayTimeline(this.strokes) };
+    this.playback = { elapsed: 0, previous: null, paused: false, speed, timeline: createReplayTimeline(this.strokes), renderer: new ReplayRenderer() };
     this.playbackFrame = requestAnimationFrame(this.tickReplay);
     this.options.onReplayChange?.('playing');
   }
@@ -417,7 +418,7 @@ export class Calamus {
     ctx.setTransform(this.canvas.width / this.width, 0, 0, this.canvas.height / this.height, 0, 0);
     ctx.clearRect(0, 0, this.width, this.height);
     if (this.playback) {
-      for (const stroke of this.playback.timeline.frame(this.playback.elapsed)) drawStroke(ctx, stroke);
+      this.playback.renderer.draw(ctx, this.playback.timeline.frame(this.playback.elapsed), this.strokes);
       return;
     }
     if (this.committedDirty) {

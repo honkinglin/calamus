@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 3,
+  "stateSequenceMatches": true,
+  "expectedStates": [
+    "playing",
+    "paused",
+    "playing",
+    "idle",
+    "playing",
+    "idle"
+  ],
+  "readbackContext": true,
+  "recordedAt": "2026-11-17T21:58:56.559Z",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+  "devicePixelRatio": 2,
+  "canvasWidth": 1920,
+  "canvasHeight": 1344,
+  "passed": true,
+  "jsonUnchanged": true,
+  "documentUnchanged": true,
+  "pauseStable": true,
+  "states": [
+    "playing",
+    "paused",
+    "playing",
+    "idle",
+    "playing",
+    "idle"
+  ],
+  "rows": [
+    {
+      "name": "repeat read without redraw",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "clear / undo",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "redo / undo",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "JSON round trip",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "PNG round trip",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay completion",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay cancellation",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    }
+  ],
+  "notes": "Synthetic 2 x 500 point transparent crossing strokes with 2.3ms sample intervals. State sequence is part of pass criteria; intermediate fractional boundaries are covered by unit tests, not this final-frame pixel comparison. Public SDK API; no live pointer input, native memory or frame latency measurement. PNG check compares exported raster before/after document round trip."
+}
