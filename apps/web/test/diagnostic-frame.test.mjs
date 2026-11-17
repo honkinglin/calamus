@@ -10,7 +10,7 @@ test('diagnostic frame resolves normally and abort cancels scheduled callbacks',
   try {
     const controller = new AbortController();
     const wait = nextFrame(controller.signal);
-    const callback=pending.get(1); pending.delete(1); callback(); await wait;
+    const callback=pending.get(1); pending.delete(1); callback(123.5); assert.equal(await wait,123.5);
     controller.abort(); assert.equal(pending.size,0);
     const cancelled = new AbortController();
     const stopped = nextFrame(cancelled.signal); cancelled.abort();

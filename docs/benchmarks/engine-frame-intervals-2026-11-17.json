@@ -1,0 +1,324 @@
+{
+  "schemaVersion": 5,
+  "replayTiming": {
+    "count": 67,
+    "samplesMs": [
+      7.300000000000182,
+      9.299999999999727,
+      8.300000000000182,
+      8.400000000000091,
+      8.299999999999727,
+      8.400000000000091,
+      8.200000000000273,
+      8.399999999999636,
+      8.300000000000182,
+      8.400000000000091,
+      8.299999999999727,
+      8.300000000000182,
+      8.100000000000364,
+      8.699999999999818,
+      8.199999999999818,
+      8.300000000000182,
+      8.399999999999636,
+      8.300000000000182,
+      8.300000000000182,
+      8.399999999999636,
+      8.400000000000546,
+      8.299999999999272,
+      8.300000000000182,
+      8.300000000000182,
+      8.399999999999636,
+      8.300000000000182,
+      8.300000000000182,
+      8.300000000000182,
+      8.399999999999636,
+      8.300000000000182,
+      8.399999999999636,
+      8.300000000000182,
+      8.300000000000182,
+      7.600000000000364,
+      9.199999999999818,
+      8.199999999999818,
+      8.300000000000182,
+      8.399999999999636,
+      8.300000000000182,
+      8.300000000000182,
+      8.399999999999636,
+      8.400000000000546,
+      8.199999999999818,
+      8.399999999999636,
+      8.300000000000182,
+      8.300000000000182,
+      7.899999999999636,
+      8.800000000000182,
+      8.399999999999636,
+      8.300000000000182,
+      16.699999999999818,
+      8.300000000000182,
+      8.300000000000182,
+      8.399999999999636,
+      16.700000000000728,
+      8.299999999999272,
+      8.300000000000182,
+      16.699999999999818,
+      8.200000000000728,
+      16.699999999999818,
+      8.399999999999636,
+      16.699999999999818,
+      16.600000000000364,
+      15.800000000000182,
+      17.5,
+      16.699999999999818,
+      16.699999999999818
+    ],
+    "medianMs": 8.300000000000182,
+    "p95Ms": 16.699999999999818,
+    "maxMs": 17.5
+  },
+  "stateSequenceMatches": true,
+  "expectedStates": [
+    "playing",
+    "paused",
+    "playing",
+    "idle",
+    "playing",
+    "idle"
+  ],
+  "readbackContext": true,
+  "recordedAt": "2026-11-17T22:09:44.596Z",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+  "devicePixelRatio": 2,
+  "canvasWidth": 1920,
+  "canvasHeight": 1344,
+  "passed": true,
+  "jsonUnchanged": true,
+  "documentUnchanged": true,
+  "pauseStable": true,
+  "states": [
+    "playing",
+    "paused",
+    "playing",
+    "idle",
+    "playing",
+    "idle"
+  ],
+  "rows": [
+    {
+      "name": "repeat read without redraw",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "clear / undo",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "redo / undo",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "JSON round trip",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "PNG round trip",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay completion",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay cancellation",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 1x / budget 100 / first complete",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 1x / budget 100 / inter-stroke gap",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 1x / budget 100 / second partial",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 1x / budget 100 / all complete",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 1x / budget 100 / cached repeat",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 1x / budget 100000 / first complete",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 1x / budget 100000 / inter-stroke gap",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 1x / budget 100000 / second partial",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 1x / budget 100000 / all complete",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 1x / budget 100000 / cached repeat",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 2x / budget 100 / first complete",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 2x / budget 100 / inter-stroke gap",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 2x / budget 100 / second partial",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 2x / budget 100 / all complete",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 2x / budget 100 / cached repeat",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 2x / budget 100000 / first complete",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 2x / budget 100000 / inter-stroke gap",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 2x / budget 100000 / second partial",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 2x / budget 100000 / all complete",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    },
+    {
+      "name": "replay geometry 2x / budget 100000 / cached repeat",
+      "changedPixels": 0,
+      "maxChannelDelta": 0,
+      "changedRGBPixels": 0,
+      "changedAlphaPixels": 0,
+      "maxAlphaDelta": 0
+    }
+  ],
+  "notes": "Synthetic 2 x 500 point transparent crossing strokes with 2.3ms sample intervals. State sequence is part of pass criteria. Intermediate cache/reference pixels use shared timeline frames at 1x/2x and 100/100000 vertex budgets; they verify rendering, not timeline selection correctness. Exact fractional boundaries remain unit-tested. Public SDK lifecycle plus internal renderer comparison; Observed rAF intervals cover resumed synthetic replay through completion, including final restoration; no live pointer input, native memory, GPU completion or input-latency measurement. Timing is observational with no pass threshold. PNG check compares exported raster before/after document round trip."
+}

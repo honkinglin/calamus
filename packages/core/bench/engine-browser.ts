@@ -1,4 +1,5 @@
 import { nextFrame } from './next-frame';
+import { frameIntervals } from './frame-intervals';
 import { Calamus } from '../src/engine';
 import { createReplayTimeline } from '../src/replay';
 import { ReplayRenderer } from '../src/replay-render';
@@ -65,7 +66,9 @@ run.onclick=async()=>{
     board.play({speed:4});await frame();board.pauseReplay();const paused=pixels();await frame();
     const pauseStable=difference(paused,pixels()).changedPixels===0;
     board.resumeReplay();const deadline=performance.now()+10000;
-    while(states.at(-1)!=='idle'){if(performance.now()>deadline)throw new Error('Replay timed out.');await frame();}
+    const replayFrameTimes:number[]=[];
+    while(states.at(-1)!=='idle'){if(performance.now()>deadline)throw new Error('Replay timed out.');replayFrameTimes.push(await frame());}
+    const replayTiming=frameIntervals(replayFrameTimes);
     compare('replay completion');
     board.play({speed:4});await frame();board.stopReplay();await frame();compare('replay cancellation');
     status.textContent='Comparing cached intermediate replay frames…';
@@ -109,7 +112,7 @@ run.onclick=async()=>{
     const expectedStates = ['playing','paused','playing','idle','playing','idle'];
     const stateSequenceMatches = states.length === expectedStates.length && states.every((state,index) => state === expectedStates[index]);
     const passed=stateSequenceMatches&&jsonUnchanged&&documentUnchanged&&pauseStable&&rows.every(row=>row.changedPixels===0);
-    report=JSON.stringify({schemaVersion:4,stateSequenceMatches,expectedStates,readbackContext,recordedAt:new Date().toISOString(),userAgent:navigator.userAgent,devicePixelRatio,canvasWidth:canvas.width,canvasHeight:canvas.height,passed,jsonUnchanged,documentUnchanged,pauseStable,states,rows,notes:'Synthetic 2 x 500 point transparent crossing strokes with 2.3ms sample intervals. State sequence is part of pass criteria. Intermediate cache/reference pixels use shared timeline frames at 1x/2x and 100/100000 vertex budgets; they verify rendering, not timeline selection correctness. Exact fractional boundaries remain unit-tested. Public SDK lifecycle plus internal renderer comparison; no live pointer input, native memory or frame latency measurement. PNG check compares exported raster before/after document round trip.'},null,2);
+    report=JSON.stringify({schemaVersion:5,replayTiming,stateSequenceMatches,expectedStates,readbackContext,recordedAt:new Date().toISOString(),userAgent:navigator.userAgent,devicePixelRatio,canvasWidth:canvas.width,canvasHeight:canvas.height,passed,jsonUnchanged,documentUnchanged,pauseStable,states,rows,notes:'Synthetic 2 x 500 point transparent crossing strokes with 2.3ms sample intervals. State sequence is part of pass criteria. Intermediate cache/reference pixels use shared timeline frames at 1x/2x and 100/100000 vertex budgets; they verify rendering, not timeline selection correctness. Exact fractional boundaries remain unit-tested. Public SDK lifecycle plus internal renderer comparison; Observed rAF intervals cover resumed synthetic replay through completion, including final restoration; no live pointer input, native memory, GPU completion or input-latency measurement. Timing is observational with no pass threshold. PNG check compares exported raster before/after document round trip.'},null,2);
     output.textContent=report;download.disabled=false;status.textContent=passed?'Passed: engine checks match.':'Differences detected; inspect report.';
   }catch(error){status.textContent=error instanceof Error?error.message:String(error);}finally{board?.destroy();task=undefined;cancel.disabled=true;run.disabled=readback.disabled=false;}
 };
