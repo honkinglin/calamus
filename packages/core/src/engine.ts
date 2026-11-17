@@ -43,7 +43,7 @@ export class Calamus {
   private hitCache = new StrokeHitCache();
   private strokes: Stroke[] = [];
   private pointCount = 0;
-  private playback: { elapsed: number; previous: number | null; paused: boolean; speed: number } | null = null;
+  private playback: { elapsed: number; previous: number | null; paused: boolean; speed: number; duration: number } | null = null;
   private playbackFrame = 0;
   private past: Stroke[][] = [];
   private future: Stroke[][] = [];
@@ -114,7 +114,7 @@ export class Calamus {
     this.cancel();
     this.stopReplay();
     if (!this.strokes.length) return;
-    this.playback = { elapsed: 0, previous: null, paused: false, speed };
+    this.playback = { elapsed: 0, previous: null, paused: false, speed, duration: replayDuration(this.strokes) };
     this.playbackFrame = requestAnimationFrame(this.tickReplay);
     this.options.onReplayChange?.('playing');
   }
@@ -147,7 +147,7 @@ export class Calamus {
     if (!playback || playback.paused || this.destroyed) return;
     if (playback.previous !== null) playback.elapsed += (time - playback.previous) * playback.speed;
     playback.previous = time;
-    if (playback.elapsed >= replayDuration(this.strokes)) {
+    if (playback.elapsed >= playback.duration) {
       this.stopReplay();
       return;
     }

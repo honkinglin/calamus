@@ -100,6 +100,35 @@ test('committed geometry is cached, DPR invalidates it and destroy removes obser
     assert.deepEqual(replayStates, ['playing', 'paused', 'playing', 'idle']);
     assert.equal(engine.exportJSON(), unchanged);
     assert.deepEqual(engine.state, unchangedHistory);
+    // A new document must get a fresh timeline, while pause/resume retains it.
+    const originalObserver = observer;
+    const timelineStates = [];
+    const timelineEngine = new Calamus(new Surface(), { onReplayChange: state => timelineStates.push(state) });
+    const timedStroke = time => ({ brush: { color:'#000', size:5 }, points:[
+      {x:0,y:0,time:0,pressure:null}, {x:10,y:10,time,pressure:null},
+    ] });
+    timelineEngine.setStrokes([timedStroke(1000)]);
+    timelineEngine.play();
+    scheduled(0);
+    scheduled(500);
+    assert.equal(timelineStates.at(-1), 'playing');
+    timelineEngine.setStrokes([timedStroke(20)]);
+    assert.equal(timelineStates.at(-1), 'idle');
+    timelineEngine.play();
+    scheduled(1000);
+    scheduled(1139);
+    assert.equal(timelineStates.at(-1), 'playing');
+    scheduled(1140);
+    assert.equal(timelineStates.at(-1), 'idle', 'replacement duration includes its own trailing pause');
+    timelineEngine.undo();
+    timelineEngine.play({speed:2});
+    scheduled(2000);
+    scheduled(2559);
+    assert.equal(timelineStates.at(-1), 'playing');
+    scheduled(2560);
+    assert.equal(timelineStates.at(-1), 'idle', 'undo and speed use the restored timeline');
+    timelineEngine.destroy();
+    observer = originalObserver;
     engine.play();
     engine.clear();
     assert.equal(replayStates.at(-1), 'idle');

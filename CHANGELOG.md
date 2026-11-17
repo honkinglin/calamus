@@ -22,6 +22,8 @@ No published releases yet. Package version 0.1.0 is a development version.
 
 ### SDK
 
+- Replay computes total duration once per playback session instead of scanning every stroke on each animation frame.
+
 - Replay uses binary search to locate visible samples in partial strokes, avoiding full scans of unrevealed samples while retaining timestamp boundary behavior.
 
 - Active translucent strokes reuse a bounded incremental Path2D while retaining one nonzero fill per frame; unsupported environments and oversized geometry fall back to the existing renderer. Browser pixel/performance acceptance remains pending.
