@@ -6,6 +6,8 @@ No published releases yet. Package version 0.1.0 is a development version.
 
 ### Web
 
+- Drawing sort preference is saved locally with safe defaults for older settings and a session-only warning when storage fails.
+
 - Drawing cards place the current-document badge below the name to improve long-name wrapping on narrow screens.
 
 - Drawing library defaults to recently modified order and offers natural name sorting alongside search, without changing the active document.

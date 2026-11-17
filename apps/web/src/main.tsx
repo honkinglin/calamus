@@ -77,7 +77,11 @@ function App() {
   const [activeDrawing, setActiveDrawing] = useState<Drawing | null>(null);
   const [drawingName, setDrawingName] = useState('');
   const [drawingSearch, setDrawingSearch] = useState('');
-  const [drawingOrder, setDrawingOrder] = useState<DrawingOrder>('recent');
+  const [preferences, setPreferences] = useState(() => {
+    try { return parsePreferences(localStorage.getItem('calamus-preferences')); }
+    catch { return { ...defaultPreferences }; }
+  });
+  const drawingOrder = preferences.drawingOrder;
   const visibleDrawings = useMemo(() => sortDrawings(filterDrawings(drawings, drawingSearch), drawingOrder), [drawings, drawingSearch, drawingOrder]);
   const [libraryMessage, setLibraryMessage] = useState('');
   const [trash, setTrash] = useState<Drawing[]>([]);
@@ -127,17 +131,13 @@ function App() {
   const [fileMessage, setFileMessage] = useState('');
   const canvas = useRef<HTMLCanvasElement>(null);
   const engine = useRef<Calamus | null>(null);
-  const [preferences, setPreferences] = useState(() => {
-    try { return parsePreferences(localStorage.getItem('calamus-preferences')); }
-    catch { return { ...defaultPreferences }; }
-  });
   const [preferenceMessage, setPreferenceMessage] = useState('');
   useEffect(() => {
     document.documentElement.dataset.theme = preferences.theme;
     try {
       localStorage.setItem('calamus-preferences', JSON.stringify(preferences));
       setPreferenceMessage('');
-    } catch { setPreferenceMessage('Appearance changes apply for this session only.'); }
+    } catch { setPreferenceMessage('Preference changes apply for this session only.'); }
   }, [preferences]);
   const [brushMode, setBrushMode] = useState<'pen' | 'highlighter'>('pen');
   const [color, setColor] = useState(palette[0]);
@@ -538,11 +538,15 @@ function App() {
           </div>
           <div className="drawing-sort">
             <label htmlFor="drawing-order">Sort by</label>
-            <select id="drawing-order" value={drawingOrder} onChange={event => setDrawingOrder(event.currentTarget.value as DrawingOrder)}>
+            <select id="drawing-order" value={drawingOrder} onChange={event => {
+              const drawingOrder = event.currentTarget.value as DrawingOrder;
+              setPreferences(value => ({ ...value, drawingOrder }));
+            }}>
               <option value="recent">Recently modified</option>
               <option value="name">Name</option>
             </select>
           </div>
+          {preferenceMessage && <p role="status">{preferenceMessage}</p>}
           <p role="status">{visibleDrawings.length} of {drawings.length} drawings</p>
         </div>
         {visibleDrawings.length === 0 && <p>No drawings match your search. Try another name or clear the search.</p>}
