@@ -6,6 +6,8 @@ No published releases yet. Package version 0.1.0 is a development version.
 
 ### Web
 
+- Drawing cards place the current-document badge below the name to improve long-name wrapping on narrow screens.
+
 - Drawing library defaults to recently modified order and offers natural name sorting alongside search, without changing the active document.
 
 - Drawing library search supports normalized name matching, result counts, empty states and clearing without changing the active drawing.
