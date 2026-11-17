@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web dev",
     "build": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web build",
-    "check": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web check",
+    "check": "pnpm --filter @calamus/core build && pnpm --filter @calamus/web check && pnpm check:diagnostics",
     "test": "pnpm --filter @calamus/core build && node --test packages/core/test/*.test.mjs && node --experimental-strip-types --test apps/web/test/*.test.mjs && node --test examples/vanilla/test/*.test.mjs",
     "bench": "pnpm --filter @calamus/core build && node --expose-gc packages/core/bench/stroke.mjs",
     "size": "pnpm --filter @calamus/core build && node scripts/package-size.mjs",
@@ -21,7 +21,9 @@
     "example:build": "pnpm example:prepare && pnpm --dir apps/web exec vite build ../../examples/vanilla",
     "release:check": "node scripts/release-readiness.mjs",
     "bench:path:browser": "pnpm --filter @calamus/web exec vite ../../packages/core/bench --host 127.0.0.1 --port 5175",
-    "bench:replay": "pnpm --filter @calamus/core build && node packages/core/bench/replay.mjs"
+    "bench:replay": "pnpm --filter @calamus/core build && node packages/core/bench/replay.mjs",
+    "check:diagnostics": "tsc -p packages/core/bench/tsconfig.json",
+    "build:diagnostics": "pnpm check:diagnostics && pnpm --filter @calamus/web exec vite build ../../packages/core/bench --config ../../packages/core/bench/vite.config.mjs"
   },
   "devDependencies": {
     "typescript": "5.9.3"

@@ -15,5 +15,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: pnpm build
+      - name: Check and build browser diagnostics
+        run: pnpm build:diagnostics
       - run: pnpm size
       - run: pnpm example:build

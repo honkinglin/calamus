@@ -1,5 +1,15 @@
 # Calamus 开发进度
 
+## 2026-11-17：P5 诊断页面类型与构建检查
+
+- [x] 新增独立诊断 tsconfig，覆盖 bench 下全部 TypeScript，严格检查且不输出文件。
+- [x] 新增双 HTML 入口 Vite 配置及 check:diagnostics/build:diagnostics 命令，路径与引擎诊断均可打包。
+- [x] pnpm check 纳入诊断类型检查；GitHub Check 工作流新增诊断类型与构建步骤。
+- [x] 本地 pnpm check、pnpm build:diagnostics 通过，确认产物被 Git 忽略。
+- [ ] 远端 CI 执行与 CI 浏览器自动交互仍待验收；页面打包不替代像素/交互测试。
+
+更新 CONTRIBUTING 检查说明。本轮无运行时变更，未重复完整单测。未推送或部署。
+
 ## 2026-11-17：P5 回放诊断状态序列与小数采样
 
 - [x] 诊断报告升级为 schemaVersion 3，增加 expectedStates 与 stateSequenceMatches，状态序列不符直接判定失败。

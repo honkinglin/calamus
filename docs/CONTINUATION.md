@@ -38,8 +38,11 @@
 
 - 已新增回放 Node 基准及六场景报告，多笔画查找改善，单笔长线约持平；详见 REPLAY_BENCHMARK.md，不能推导浏览器 FPS。
 
+- 诊断 TypeScript 与双页打包已接入 Check 工作流，本地通过，远端 CI 尚未验证。
+
 ## 常用检查
 
+- pnpm build:diagnostics：严格类型检查并打包两页诊断；pnpm check 也含诊断类型检查。
 - pnpm bench:replay：回放查找正确性对照和 Node 耗时报告。
 - pnpm test：核心、Web 和原生示例测试。
 - pnpm --filter @calamus/web build：Web 类型检查与构建。

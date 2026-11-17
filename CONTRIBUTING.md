@@ -30,8 +30,11 @@ Do not edit generated `dist`, example `vendor`, or temporary tarballs. Do not in
 | SDK behavior | `pnpm test`, `pnpm build`, `pnpm check:package` |
 | Public exports or declarations | `pnpm check:package`, `pnpm example:build`, `pnpm size` |
 | Playground behavior | `pnpm test`, `pnpm build`, relevant browser interactions |
+| Browser diagnostics | `pnpm build:diagnostics`, run both diagnostic pages in a browser |
 | Example | `pnpm example:build`, browser workflow checks |
 | Documentation | Verify links, commands and examples against the current API |
+
+`pnpm check` includes strict diagnostics type checking. CI builds both diagnostic HTML entry points through `pnpm build:diagnostics`; this does not execute browser pixel or interaction checks. Generated files stay in `packages/core/bench/dist` and are not part of the published SDK.
 
 For rendering changes, compare opaque and translucent self-intersections, pressure changes, DPR/resize, cancellation, undo/redo, replay and exports. Record which browsers and devices you actually tested. Mark untested cases explicitly.
 
