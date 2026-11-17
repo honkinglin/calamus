@@ -10,7 +10,7 @@ import type { Drawing, DrawingOrder } from './library';
 import { createImportController } from './import-controller';
 import { createThumbnail } from './thumbnail';
 import { clampZoom, zoomScroll } from './viewport';
-import { brushColor, defaultPreferences, parsePreferences } from './preferences';
+import { brushColor, readPreferences, savePreferences } from './preferences';
 import { StrokeLab } from './StrokeLab';
 import { Icon } from './Icon';
 import './style.css';
@@ -77,10 +77,7 @@ function App() {
   const [activeDrawing, setActiveDrawing] = useState<Drawing | null>(null);
   const [drawingName, setDrawingName] = useState('');
   const [drawingSearch, setDrawingSearch] = useState('');
-  const [preferences, setPreferences] = useState(() => {
-    try { return parsePreferences(localStorage.getItem('calamus-preferences')); }
-    catch { return { ...defaultPreferences }; }
-  });
+  const [preferences, setPreferences] = useState(() => readPreferences(() => localStorage));
   const drawingOrder = preferences.drawingOrder;
   const visibleDrawings = useMemo(() => sortDrawings(filterDrawings(drawings, drawingSearch), drawingOrder), [drawings, drawingSearch, drawingOrder]);
   const [libraryMessage, setLibraryMessage] = useState('');
@@ -134,10 +131,8 @@ function App() {
   const [preferenceMessage, setPreferenceMessage] = useState('');
   useEffect(() => {
     document.documentElement.dataset.theme = preferences.theme;
-    try {
-      localStorage.setItem('calamus-preferences', JSON.stringify(preferences));
-      setPreferenceMessage('');
-    } catch { setPreferenceMessage('Preference changes apply for this session only.'); }
+    setPreferenceMessage(savePreferences(preferences, () => localStorage)
+      ? '' : 'Preference changes apply for this session only.');
   }, [preferences]);
   const [brushMode, setBrushMode] = useState<'pen' | 'highlighter'>('pen');
   const [color, setColor] = useState(palette[0]);

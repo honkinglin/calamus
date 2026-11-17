@@ -14,3 +14,19 @@ export function parsePreferences(value: string | null): Preferences {
 export function brushColor(color: string, mode: 'pen' | 'highlighter'): string {
   return mode === 'highlighter' ? `${color}66` : color;
 }
+
+type PreferenceStorage = Pick<Storage, 'getItem' | 'setItem'>;
+const preferenceKey = 'calamus-preferences';
+
+// Resolve storage inside the guard: accessing localStorage itself can throw.
+export function readPreferences(storage: () => PreferenceStorage): Preferences {
+  try { return parsePreferences(storage().getItem(preferenceKey)); }
+  catch { return { ...defaultPreferences }; }
+}
+
+export function savePreferences(preferences: Preferences, storage: () => PreferenceStorage): boolean {
+  try {
+    storage().setItem(preferenceKey, JSON.stringify(preferences));
+    return true;
+  } catch { return false; }
+}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parsePreferences, defaultPreferences, brushColor } from '../src/preferences.ts';
+import { parsePreferences, defaultPreferences, brushColor, readPreferences, savePreferences } from '../src/preferences.ts';
 
 test('invalid or missing appearance preferences fall back safely', () => {
   for (const input of [null, '', '{', 'null', '42', '{"theme":"unknown","paperColor":"red"}']) {
@@ -25,4 +25,32 @@ test('legacy and unsupported drawing orders fall back without resetting appearan
   }
   const saved = {...defaultPreferences, drawingOrder:'name'};
   assert.deepEqual(parsePreferences(JSON.stringify(saved)), saved);
+});
+
+test('blocked storage access and reads return independent defaults', () => {
+  const blocked = () => { throw new DOMException('Blocked', 'SecurityError'); };
+  const a = readPreferences(blocked);
+  assert.deepEqual(a, defaultPreferences);
+  assert.notEqual(a, defaultPreferences);
+  assert.deepEqual(readPreferences(() => ({getItem: blocked})), defaultPreferences);
+  assert.equal(savePreferences(defaultPreferences, blocked), false);
+});
+test('failed writes preserve session preferences and recover on a later save', () => {
+  const settings = {...defaultPreferences, drawingOrder:'name', theme:'dark'};
+  const before = structuredClone(settings);
+  let fail = true;
+  const values = new Map();
+  const storage = () => ({
+    getItem: key => values.get(key) ?? null,
+    setItem(key, value) {
+      if (fail) throw new DOMException('Full', 'QuotaExceededError');
+      values.set(key, value);
+    },
+  });
+  assert.equal(savePreferences(settings, storage), false);
+  assert.deepEqual(settings, before);
+  assert.equal(values.size, 0);
+  fail = false;
+  assert.equal(savePreferences(settings, storage), true);
+  assert.deepEqual(readPreferences(storage), settings);
 });
