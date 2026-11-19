@@ -38,6 +38,7 @@ try {
   for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies']) assert.equal(Object.keys(manifest[field] ?? {}).length, 0, `${field} must remain empty`);
   console.log(run(process.execPath, ['smoke.mjs'], consumer).trim());
   console.log(run(process.execPath, ['umd.cjs'], consumer).trim());
+  console.log(run(process.execPath, ['replay.mjs'], consumer).trim());
   await cp(join(root, 'examples/vanilla/app.js'), join(consumer, 'example.js'));
   const compiler = createRequire(import.meta.url).resolve('typescript/bin/tsc');
   for (const [module, resolution] of [['NodeNext', 'NodeNext'], ['ESNext', 'Bundler']]) {

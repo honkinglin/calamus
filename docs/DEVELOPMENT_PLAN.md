@@ -272,6 +272,7 @@ board.destroy();
 - [x] 发布前 SDK 配置一致性修复：实时笔刷与导入共用校验，尺寸范围一致，非法更新保留状态及往返文档测试通过。
 - [x] ESM/声明与独立 UMD 打包、exports/types/files 配置及包说明；实际 tarball 的三种 UMD 加载分支与 ESM 结果对照通过。
 - [x] UMD 经典 script 浏览器接入与绘制验收；销毁/重建、JSON 下载及恢复笔画校验通过（2026-11-14）。
+- [x] 真实安装包 ESM/UMD 回放生命周期及绘制命令一致性消费验证，覆盖暂停/恢复、取消与销毁清理。
 - [x] pnpm check:package：真实 pack 后，在仓库外临时消费者中离线安装 tarball，执行纯函数示例并自动清理。
 - [x] 原生 ESM 与严格 TypeScript（NodeNext/Bundler）消费、无运行时/peer/optional 依赖、无 DOM 模块导入及内部路径封装验证。
 - [x] 包级 README 随 tarball 分发，说明本地安装、浏览器接入、限制与验证方式。

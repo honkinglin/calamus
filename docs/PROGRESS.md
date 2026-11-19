@@ -1,5 +1,16 @@
 # Calamus 开发进度
 
+## 2026-11-18：P6 安装包回放生命周期消费验证
+
+- [x] 新增独立消费者 replay.mjs，使用真实安装的 tarball 分别运行 ESM 与 UMD 引擎，而非工作区源码。
+- [x] 比较透明双笔画的回放命令、暂停/恢复与完成状态；校验 JSON/历史不变、停止后无继续绘制、销毁后无帧任务且恢复 touchAction。
+- [x] 修复测试环境缺少 matchMedia/PointerEvent 的模拟，未改 SDK 运行时。
+- [x] pnpm check:package 完整通过：29 个归档条目白名单、纯 API、三种 UMD 加载、回放、严格 JS 及 NodeNext/Bundler 声明消费。
+- [x] 更新 CONTRIBUTING；既有 CI example:build 自动调用该检查。
+- [ ] 远端 CI、registry 发布与真实浏览器性能验收仍未完成。
+
+使用模拟 Canvas 命令，不替代像素/设备验收。未推送或部署。
+
 ## 2026-11-17：P5 合成回放帧间隔观测
 
 - [x] nextFrame 返回浏览器 rAF 时间戳，保留既有取消、超时及监听清理行为。
