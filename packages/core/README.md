@@ -53,21 +53,59 @@ The engine maps pointer coordinates into the logical document size and adapts th
 
 Exports contain committed strokes, not an unfinished gesture. Store the returned JSON or Blob in your application; the SDK does not upload or persist documents automatically. Brush configuration accepts only 3/4/6/8-digit hexadecimal colors, sizes 0.01–4096, and follow radii 0–4096. Logical canvas dimensions must be 1–32768. Invalid settings are rejected before replacing the current brush. Transparent strokes retain a single fill; very dense transparent paths can still be expensive.
 
+## Replay and lifecycle
+
+Create one engine per mounted canvas. The helper below loads a saved document, reports playback state, and returns controls for your own buttons:
+
+```ts
+import { Calamus } from '@calamus/core';
+
+export function mountReplay(canvas: HTMLCanvasElement, json: string, status: HTMLElement) {
+  const engine = new Calamus(canvas, {
+    width: 1000,
+    height: 700,
+    onReplayChange: state => { status.textContent = state; },
+  });
+  try {
+    // Opening a saved document establishes a new undo history.
+    engine.loadJSON(json, { resetHistory: true });
+  } catch (error) {
+    engine.destroy();
+    throw error;
+  }
+  status.textContent = 'idle';
+  return {
+    play: (speed = 1) => engine.play({ speed }),
+    pause: () => engine.pauseReplay(),
+    resume: () => engine.resumeReplay(),
+    stop: () => engine.stopReplay(),
+    dispose: () => engine.destroy(),
+  };
+}
+```
+
+Wire these controls to your UI, and call `dispose()` on unmount. Playback speed must be finite and between 0.25 and 4. Pausing preserves progress; resuming continues it; stopping restores the complete document. Playback does not change saved strokes or undo history. Calling `play()` again starts from the beginning. An empty document does not start playback. The state callback reports `playing`, `paused`, and `idle`; it is not a per-frame progress callback.
+
+`loadJSON` requires the document dimensions to match the engine. Its default behavior is undoable replacement; use `{ resetHistory: true }` when opening a different saved work. Invalid documents throw before replacing current content. Wrap imports in application-level error handling so users can retry. `destroy()` cancels scheduled work and removes listeners; it is safe to call again, but create a new engine before drawing after disposal.
+
 ## Pure functions
 
 ```ts
 import { createSVG, parseDocument, processStroke } from '@calamus/core';
 
-const document = parseDocument(savedJSON);
-const svg = createSVG(document.strokes, document.width, document.height);
-const renderedPoints = document.strokes.map(processStroke);
+export function inspectDocument(savedJSON: string) {
+  const document = parseDocument(savedJSON);
+  const svg = createSVG(document.strokes, document.width, document.height);
+  const renderedPoints = document.strokes.map(processStroke);
+  return { svg, renderedPoints };
+}
 ```
 
 Raw samples remain in the document; rendering derives smoothed coordinates and widths. `parseDocument` validates imported data and rejects unsupported document versions.
 
 ## Package verification
 
-Run `pnpm check:package` in the repository. It builds and packs the SDK, installs the tarball into a temporary external consumer with pnpm offline, runs DOM-free ESM checks, and validates strict TypeScript consumers in NodeNext and Bundler modes. Temporary files are removed afterwards. This does not publish the package or replace browser rendering tests.
+Run `pnpm check:package` in the repository. It builds and packs the SDK, installs the tarball into a temporary external consumer with pnpm offline, runs DOM-free ESM checks, compares installed ESM/UMD replay lifecycle behavior with a deterministic Canvas fixture, and validates strict TypeScript consumers and every TypeScript example in this packaged README in NodeNext and Bundler modes. Temporary files are removed afterwards. This does not publish the package or replace browser rendering tests.
 
 ## Classic script / UMD
 

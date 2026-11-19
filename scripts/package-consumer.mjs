@@ -33,7 +33,16 @@ try {
   run('pnpm', ['add', archive, '--offline', '--ignore-scripts', '--store-dir', join(temporary, 'store')], consumer);
   const installed = join(consumer, 'node_modules/@calamus/core');
   assert.ok((await realpath(installed)).startsWith(await realpath(temporary)), 'Consumer must use the installed archive, not a workspace link.');
-  assert.match(await readFile(join(installed, 'README.md'), 'utf8'), /# Calamus Core/);
+  const packagedReadme = await readFile(join(installed, 'README.md'), 'utf8');
+  assert.match(packagedReadme, /# Calamus Core/);
+  const readmeExamples = [...packagedReadme.matchAll(/```ts\r?\n([\s\S]*?)```/g)];
+  assert.ok(readmeExamples.length >= 3, 'Expected browser, replay and pure API examples.');
+  const readmeFiles = [];
+  for (const [index, match] of readmeExamples.entries()) {
+    const file = `readme-example-${index}.ts`;
+    await writeFile(join(consumer, file), `${match[1]}\nexport {};\n`);
+    readmeFiles.push(file);
+  }
   const manifest = JSON.parse(await readFile(join(installed, 'package.json'), 'utf8'));
   for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies']) assert.equal(Object.keys(manifest[field] ?? {}).length, 0, `${field} must remain empty`);
   console.log(run(process.execPath, ['smoke.mjs'], consumer).trim());
@@ -43,9 +52,10 @@ try {
   const compiler = createRequire(import.meta.url).resolve('typescript/bin/tsc');
   for (const [module, resolution] of [['NodeNext', 'NodeNext'], ['ESNext', 'Bundler']]) {
     run(process.execPath, [compiler, '--noEmit', '--strict', '--target', 'ES2022', '--module', module,
-      '--moduleResolution', resolution, '--lib', 'ES2022,DOM', 'types.ts'], consumer);
+      '--moduleResolution', resolution, '--lib', 'ES2022,DOM', 'types.ts', ...readmeFiles], consumer);
   }
   run(process.execPath, [compiler, '--allowJs', '--checkJs', '--noEmit', '--strict', '--target', 'ES2022', '--module', 'NodeNext', '--lib', 'ES2022,DOM', 'example.js'], consumer);
+  console.log(`All ${readmeFiles.length} packaged README TypeScript examples passed strict NodeNext and Bundler checks.`);
   console.log('Vanilla JavaScript example passed strict checking against installed declarations.');
   if (prepareExample) {
     const vendor = join(root, 'examples/vanilla/vendor');

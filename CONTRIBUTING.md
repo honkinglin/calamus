@@ -36,6 +36,8 @@ Do not edit generated `dist`, example `vendor`, or temporary tarballs. Do not in
 
 `pnpm check` includes strict diagnostics type checking. CI builds both diagnostic HTML entry points through `pnpm build:diagnostics`; this does not execute browser pixel or interaction checks. Generated files stay in `packages/core/bench/dist` and are not part of the published SDK.
 
+Every `ts` fenced example in the packaged core README is compiled against the installed declarations in NodeNext and Bundler modes. Keep snippets self-contained; declare inputs through function parameters rather than relying on unstated globals.
+
 `pnpm check:package` also runs the installed ESM and UMD engines with a deterministic Canvas/rAF fixture, comparing replay commands, pause/resume, cancellation, document/history preservation and teardown. This validates installed artifacts; the fixture does not replace real-browser pixel or performance checks. The existing `example:build` CI step invokes this package verification as well.
 
 For rendering changes, compare opaque and translucent self-intersections, pressure changes, DPR/resize, cancellation, undo/redo, replay and exports. Record which browsers and devices you actually tested. Mark untested cases explicitly.

@@ -275,6 +275,7 @@ board.destroy();
 - [x] 真实安装包 ESM/UMD 回放生命周期及绘制命令一致性消费验证，覆盖暂停/恢复、取消与销毁清理。
 - [x] pnpm check:package：真实 pack 后，在仓库外临时消费者中离线安装 tarball，执行纯函数示例并自动清理。
 - [x] 原生 ESM 与严格 TypeScript（NodeNext/Bundler）消费、无运行时/peer/optional 依赖、无 DOM 模块导入及内部路径封装验证。
+- [x] 包内 README 三段 TypeScript 示例由真实安装包做 NodeNext/Bundler 编译验证；补齐回放生命周期与导入异常处理说明。
 - [x] 包级 README 随 tarball 分发，说明本地安装、浏览器接入、限制与验证方式。
 - [x] 提供原生 JS 单页示例：创建、切换稳定方式、导出、销毁/重建；实际 tarball 的严格 JS 类型检查和静态构建通过。
 - [x] 原生 JS 示例浏览器绘制、下载、生命周期和响应布局验收（2026-11-14，桌面应用内浏览器及 390px 模拟视口；不含真实触控设备）。
